@@ -15,11 +15,11 @@
 ### END INIT INFO
 
 #Settings
-SERVICE='minecraft_server.jar'
+SERVICE='craftbukkit-0.0.1-SNAPSHOT.jar'
 USERNAME="v"
 MCPATH='/home/v/mine'
 CPU_COUNT=2
-INVOCATION="java -Xmx960M -Xms960M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar minecraft_server.jar nogui"
+INVOCATION="java -Xmx960M -Xms960M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 BACKUPPATH='/home/v/minebak'
 
 ME=`whoami`
