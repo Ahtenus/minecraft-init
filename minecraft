@@ -1,6 +1,5 @@
 #!/bin/bash
 # /etc/init.d/minecraft
-# version 0.3.2 2011-01-27 (YYYY-MM-DD)
 
 ### BEGIN INIT INFO
 # Provides:   minecraft
@@ -37,6 +36,7 @@ mc_start() {
     echo "Tried to start but $SERVICE was already running!"
   else
     echo "$SERVICE was not running... starting."
+    # rsync -tr $MCPATH/world-disc /dev/shm/
     cd $MCPATH
     as_user "cd $MCPATH && screen -dmS minecraft $INVOCATION"
     sleep 7
@@ -115,7 +115,13 @@ mc_update() {
     fi
   fi
 }
-
+log_roll() {
+	mc_stop
+	DATE=`date "+%Y-%m-%d"`
+	mv $MCPATH/server.log $MCPATH/logs/server-$DATE.log
+	gzip $MCPATH/logs/server-$DATE.log
+	mc_start
+}
 mc_world_backup() {
 # Changing to .bz2 compression
    echo "Backing up minecraft world"
@@ -206,8 +212,14 @@ case "$1" in
     ;;
   connected)
     as_user "screen -p 0 -S minecraft -X eval 'stuff list\015'"
-    sleep 1s
+    sleep 3s
     tac $MCPATH/server.log | grep -m 1 "Connected"
+    ;;
+  log-roll)
+  as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+    mc_stop
+    log_roll 
+    mc_start
     ;;
   status)
     if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
