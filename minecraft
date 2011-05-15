@@ -186,11 +186,11 @@ case "$1" in
     mc_start
     ;;
   stop)
-  as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
     mc_stop
     ;;
   restart)
-  as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
     mc_stop
     mc_start
     ;;
