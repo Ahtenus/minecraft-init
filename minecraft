@@ -18,8 +18,11 @@ SERVICE='craftbukkit-0.0.1-SNAPSHOT.jar'
 USERNAME="v"
 MCPATH='/home/v/mine'
 CPU_COUNT=2
-INVOCATION="java -Xmx960M -Xms960M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
+INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 BACKUPPATH='/home/v/minebak'
+WORLDSTORAGE=/home/v/mine/diskworld #Acctuall path to world
+RAMDISK=/dev/shm
+
 
 ME=`whoami`
 as_user() {
@@ -53,7 +56,7 @@ mc_saveoff() {
         if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... suspending saves"
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
+		# as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
                 as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-off\"\015'"
                 as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
                 sync
@@ -68,7 +71,7 @@ mc_saveon() {
 	then
 		echo "$SERVICE is running... re-enabling saves"
                 as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-on\"\015'"
-                as_user "screen -p 0 -S minecraft -X eval 'stuff \"say World backup complete. \"\015'"
+                # as_user "screen -p 0 -S minecraft -X eval 'stuff \"say World backup complete. \"\015'"
 	else
                 echo "$SERVICE was not running. Not resuming saves."
 	fi
@@ -142,72 +145,43 @@ mc_world_backup() {
      echo "Backed up world"
    fi
 }
-mc_backup() {
-   echo "Backing up minecraft world"
-   if [ -d $BACKUPPATH/world_`date "+%Y.%m.%d"` ]
-   then
-     for i in 1 2 3 4 5 6
-     do
-       if [ -d $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i ]
-       then
-         continue
-       else
-         as_user "cd $MCPATH && cp -r world $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i"
-         break
-       fi
-     done
-   else
-     as_user "cd $MCPATH && cp -r world $BACKUPPATH/world_`date "+%Y.%m.%d"`"
-     echo "Backed up world"
-   fi
-   echo "Backing up the minecraft server executable"
-   if [ -f "$BACKUPPATH/minecraft_server_`date "+%Y.%m.%d"`.jar" ]
-   then
-     for i in 1 2 3 4 5 6
-     do
-       if [ -f "$BACKUPPATH/minecraft_server_`date "+%Y.%m.%d"`-$i.jar" ]
-       then
-         continue
-       else
-         as_user "cd $MCPATH && cp minecraft_server.jar \"$BACKUPPATH/minecraft_server_`date "+%Y.%m.%d"`-$i.jar\""
-         break
-       fi
-     done
-   else
-     as_user "cd $MCPATH && cp minecraft_server.jar \"$BACKUPPATH/minecraft_server_`date "+%Y.%m.%d"`.jar\""
-   fi
-   echo "Backup complete"
+to_ram() {
+	if [ -L $MCPATH/world ]
+	then
+		as_user "rsync -rvt $WORLDSTORAGE/ $RAMDISK/world"
+	fi
 }
-
+to_disk() {
+	as_user "rsync -rvt $MCPATH/world/ $WORLDSTORAGE"
+}
 
 #Start-Stop here
 case "$1" in
   start)
+    to_ram
     mc_start
     ;;
   stop)
     as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
     mc_stop
+    to_disk
     ;;
   restart)
     as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
     mc_stop
     mc_start
     ;;
-  update)
-    mc_stop
-    mc_backup
-    mc_update
-    mc_start
-    ;;
   backup)
+    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
     mc_saveoff
     mc_world_backup
     mc_saveon
+    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backup complete.\"\015'"
     ;;
-  backup-all)
+  to-disk)
     mc_saveoff
-    mc_backup
+    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say .\"\015'"
+    to_disk
     mc_saveon
     ;;
   connected)
@@ -231,7 +205,7 @@ case "$1" in
     ;;
 
   *)
-  echo "Usage: /etc/init.d/minecraft {start|stop|update|backup|backup-all|connected|status|restart}"
+  echo "Usage: /etc/init.d/minecraft {start|stop|backup|backup-all|connected|status|restart}"
   exit 1
   ;;
 esac
