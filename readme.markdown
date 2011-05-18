@@ -35,7 +35,7 @@ initscript, I'm using Ubuntu server 10.10 so if are too just follow along.
 
 	and add these lines
 
-		m 	h 	dom	mon	dow	command
+		#m 	h 	dom	mon	dow	command
 		02 	05 	*	*	*	/etc/init.d/minecraft backup
 		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
 		*/10 	* 	*	*	*	/etc/init.d/minecraft to-disk
