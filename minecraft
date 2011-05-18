@@ -10,113 +10,134 @@
 # Default-Start:  2 3 4 5
 # Default-Stop:   0 1 6
 # Short-Description:    Minecraft server
-# Description:    Starts the minecraft server
+# Description:    Init script for minecraft/bukkit server, with rolling logs and use of ramdisk for less lag. 
 ### END INIT INFO
 
-#Settings
+### Based on http://www.minecraftwiki.net/wiki/Server_startup_script
+
+### REQUIERMENTS
+# screen, rsync
+
+### SETUP
+## There is a couple of things that need to be setup before using this
+## initscript, I'm using Ubuntu server 10.10 so if are to just follow along.
+#
+## Move or symlink the script to /etc/init.d/minecraft
+#
+## Rename your world dir to diskworld and symlink the ramdisk in instead.
+#
+# cd ~/minecraft
+# mv world diskworld
+# ln -s /dev/shm/world world
+#
+## Create the log directory
+# 
+# mkdir logs
+#
+### Setup cron
+#
+# sudo crontab -e 
+# 
+# m 	h	dom	mon	dow	command
+# 02	05	*	*	*	/etc/init.d/minecraft backup
+# 55	04	*	*	*	/etc/init.d/minecraft log-roll
+# */10	*	*	*	*	/etc/init.d/minecraft to-disk
+#
+
+
+### SETTINGS
+
+# Name of server.jar file
 SERVICE='craftbukkit-0.0.1-SNAPSHOT.jar'
+# User that should run the server
 USERNAME="v"
+# Path to minecraft directory excluding the last ex: /home/v/mine
 MCPATH='/home/v/mine'
 CPU_COUNT=2
+# Change the values of -Xmx###M and -Xms###M to how mutch ram you want to give to the
+# server, remeber that the world will stored in you ram, so subtract your
+# world size from values.
 INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
+# Where the world backups should go
 BACKUPPATH='/home/v/minebak'
-WORLDSTORAGE=/home/v/mine/diskworld #Acctuall path to world
-RAMDISK=/dev/shm
+# Where the logs are copied when running log-roll 
+LOGPATH="${MCPATH}/logs"
+# Where the world is located on the disk
+WORLDSTORAGE='/home/v/mine/diskworld'
+#Path to the the mounted ramdisk default in ubuntu: /dev/shm
+RAMDISK='/dev/shm'
 
 
 ME=`whoami`
 as_user() {
-  if [ $ME == $USERNAME ] ; then
-    bash -c "$1"
-  else
-    su - $USERNAME -c "$1"
-  fi
+	if [ $ME == $USERNAME ] ; then
+		bash -c "$1"
+	else
+		su - $USERNAME -c "$1"
+	fi
 }
 
 mc_start() {
-  if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-  then
-    echo "Tried to start but $SERVICE was already running!"
-  else
-    echo "$SERVICE was not running... starting."
-    # rsync -tr $MCPATH/world-disc /dev/shm/
-    cd $MCPATH
-    as_user "cd $MCPATH && screen -dmS minecraft $INVOCATION"
-    sleep 7
-    if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-    then
-      echo "$SERVICE is now running."
-    else
-      echo "Could not start $SERVICE."
-    fi
-  fi
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		echo "Tried to start but $SERVICE was already running!"
+	else
+		echo "$SERVICE was not running... starting."
+		# rsync -tr $MCPATH/world-disc /dev/shm/
+		cd $MCPATH
+		as_user "cd $MCPATH && screen -dmS minecraft $INVOCATION"
+		sleep 7
+		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+		then
+			echo "$SERVICE is now running."
+		else
+			echo "Could not start $SERVICE."
+		fi
+	fi
 }
 
 mc_saveoff() {
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... suspending saves"
 		# as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
-                as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-off\"\015'"
-                as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
-                sync
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-off\"\015'"
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
+		sync
 		sleep 10
 	else
-                echo "$SERVICE was not running. Not suspending saves."
+		echo "$SERVICE was not running. Not suspending saves."
 	fi
 }
 
 mc_saveon() {
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... re-enabling saves"
-                as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-on\"\015'"
-                # as_user "screen -p 0 -S minecraft -X eval 'stuff \"say World backup complete. \"\015'"
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-on\"\015'"
+		# as_user "screen -p 0 -S minecraft -X eval 'stuff \"say World backup complete. \"\015'"
 	else
-                echo "$SERVICE was not running. Not resuming saves."
+		echo "$SERVICE was not running. Not resuming saves."
 	fi
 }
 
 mc_stop() {
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-        then
-                echo "$SERVICE is running... stopping."
-                as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
-                sleep 10
-                as_user "screen -p 0 -S minecraft -X eval 'stuff \"stop\"\015'"
-                sleep 7
-        else
-                echo "$SERVICE was not running."
-        fi
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-        then
-                echo "$SERVICE could not be shut down... still running."
-        else
-                echo "$SERVICE is shut down."
-        fi
-}
-
-
-mc_update() {
-  if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-  then
-    echo "$SERVICE is running! Will not start update."
-  else
-    MC_SERVER_URL=http://minecraft.net/`wget -q -O - http://www.minecraft.net/download.jsp | grep minecraft_server.jar\</a\> | cut -d \" -f 2`
-    as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
-    if [ -f $MCPATH/minecraft_server.jar.update ]
-    then
-      if `diff $MCPATH/minecraft_server.jar $MCPATH/minecraft_server.jar.update >/dev/null`
-        then 
-          echo "You are already running the latest version of $SERVICE."
-        else
-          as_user "mv $MCPATH/minecraft_server.jar.update $MCPATH/minecraft_server.jar"
-          echo "Minecraft successfully updated."
-      fi
-    else
-      echo "Minecraft update could not be downloaded."
-    fi
-  fi
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		echo "$SERVICE is running... stopping."
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
+		sleep 10
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"stop\"\015'"
+		sleep 7
+	else
+		echo "$SERVICE was not running."
+	fi
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		echo "$SERVICE could not be shut down... still running."
+	else
+		echo "$SERVICE is shut down."
+	fi
 }
 log_roll() {
 	mc_stop
@@ -126,24 +147,23 @@ log_roll() {
 	mc_start
 }
 mc_world_backup() {
-# Changing to .bz2 compression
-   echo "Backing up minecraft world"
-   if [ -e $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 ]
-   then
-     for i in 1 2 3 4 5 6
-     do
-       if [ -e $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 ]
-       then
-         continue
-       else
-         as_user "cd $MCPATH && tar -cjf $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 world"
-         break
-       fi
-     done
-   else
-     as_user "cd $MCPATH && tar -cjf $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 world"
-     echo "Backed up world"
-   fi
+	echo "Backing up minecraft world"
+	if [ -e $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 ]
+	then
+		for i in 1 2 3 4 5 6
+		do
+			if [ -e $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 ]
+			then
+				continue
+			else
+				as_user "cd $MCPATH && tar -cjf $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 world"
+				break
+			fi
+		done
+	else
+		as_user "cd $MCPATH && tar -cjf $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 world"
+		echo "Backed up world"
+	fi
 }
 to_ram() {
 	if [ -L $MCPATH/world ]
@@ -155,59 +175,68 @@ to_disk() {
 	as_user "rsync -rvt $MCPATH/world/ $WORLDSTORAGE"
 }
 
-#Start-Stop here
 case "$1" in
-  start)
-    to_ram
-    mc_start
-    ;;
-  stop)
-    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
-    mc_stop
-    to_disk
-    ;;
-  restart)
-    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
-    mc_stop
-    mc_start
-    ;;
-  backup)
-    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
-    mc_saveoff
-    mc_world_backup
-    mc_saveon
-    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backup complete.\"\015'"
-    ;;
-  to-disk)
-    mc_saveoff
-    as_user "screen -p 0 -S minecraft -X eval 'stuff \"say .\"\015'"
-    to_disk
-    mc_saveon
-    ;;
-  connected)
-    as_user "screen -p 0 -S minecraft -X eval 'stuff list\015'"
-    sleep 3s
-    tac $MCPATH/server.log | grep -m 1 "Connected"
-    ;;
-  log-roll)
-  as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
-    mc_stop
-    log_roll 
-    mc_start
-    ;;
-  status)
-    if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-    then
-      echo "$SERVICE is running."
-    else
-      echo "$SERVICE is not running."
-    fi
-    ;;
+	start)
+		# Starts the server
+		to_ram
+		mc_start
+		;;
+	stop)
+		# Stops the server
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+		mc_stop
+		to_disk
+		;;
+	restart)
+		# Restarts the server
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+		mc_stop
+		mc_start
+		;;
+	backup)
+		# Backups world
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
+		mc_saveoff
+		mc_world_backup
+		mc_saveon
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backup complete.\"\015'"
+		;;
+	to-disk)
+		# Writes from the ramdisk to disk, in case the server crashes. 
+		# Using ramdisk speeds things up alot, especially if you allow
+		# teleportation on the server.
+		mc_saveoff
+		to_disk
+		mc_saveon
+		;;
+	connected)
+		# Lists connected users
+		as_user "screen -p 0 -S minecraft -X eval 'stuff list\015'"
+		sleep 3s
+		tac $MCPATH/server.log | grep -m 1 "Connected"
+		;;
+	log-roll)
+		# Moves and Gzips the logfile, a big log file slows down the
+		# server ALOT (what was notch thinking?)
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+		mc_stop
+		log_roll 
+		mc_start
+		;;
+	status)
+		# Shows server status
+		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+		then
+			echo "$SERVICE is running."
+		else
+			echo "$SERVICE is not running."
+		fi
+		;;
 
-  *)
-  echo "Usage: /etc/init.d/minecraft {start|stop|backup|backup-all|connected|status|restart}"
-  exit 1
-  ;;
+	*)
+		echo "Usage: /etc/init.d/minecraft {start|stop|backup|log-roll|to-disk|connected|status|restart}"
+		exit 1
+		;;
 esac
 
 exit 0
