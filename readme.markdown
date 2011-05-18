@@ -21,22 +21,22 @@ initscript, I'm using Ubuntu server 10.10 so if are to just follow along.
 
 2. Rename your world dir to diskworld and symlink the ramdisk in instead.
 
-	cd ~/minecraft
-	mv world diskworld
-	ln -s /dev/shm/world world
+		cd ~/minecraft
+		mv world diskworld
+		ln -s /dev/shm/world world
 
 3. Create the log directory
 
-	mkdir logs
+		mkdir logs
 
 4. Edit crontab
 
-	sudo crontab -e
+		sudo crontab -e
 
-and add these lines
+	and add these lines
 
-	m 	h 	dom	mon	dow	command
-	02 	05 	*	*	*	/etc/init.d/minecraft backup
-	55 	04 	*	*	*	/etc/init.d/minecraft log-roll
-	*/10 	* 	*	*	*	/etc/init.d/minecraft to-disk
+		m 	h 	dom	mon	dow	command
+		02 	05 	*	*	*	/etc/init.d/minecraft backup
+		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
+		*/10 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
