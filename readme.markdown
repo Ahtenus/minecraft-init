@@ -15,7 +15,7 @@ Get to the server console
 Setup
 =====
 There is a couple of things that need to be setup before using this
-initscript, I'm using Ubuntu server 10.10 so if are to just follow along.
+initscript, I'm using Ubuntu server 10.10 so if are too just follow along.
 
 1. Move or symlink the script to /etc/init.d/minecraft
 
