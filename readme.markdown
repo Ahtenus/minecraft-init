@@ -40,3 +40,4 @@ initscript, I'm using Ubuntu server 10.10 so if are to just follow along.
 		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
 		*/10 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
+5. Edit the variables in the scriptfile to your needs
