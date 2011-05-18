@@ -7,8 +7,8 @@ Requierments
 ------------
 screen,rsync
 
-Get to the server console
--------------------------
+Access server console
+---------------------
 
 	screen -r minecraft
 
