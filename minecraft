@@ -156,12 +156,12 @@ mc_world_backup() {
 			then
 				continue
 			else
-				as_user "cd $MCPATH && tar -cjf $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 world"
+				as_user "cd $MCPATH && tar -hcjf $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 world"
 				break
 			fi
 		done
 	else
-		as_user "cd $MCPATH && tar -cjf $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 world"
+		as_user "cd $MCPATH && tar -hcjf $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 world"
 		echo "Backed up world"
 	fi
 }
