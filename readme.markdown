@@ -6,7 +6,7 @@ Moving this scriptfile to /etc/init.d will start the minecraftserver at boot.
 The initscript will make the server use a ramdisk to contain the world. Ramdisk is a part of the ram mounted as a disk and will speed up the server especially if you've enabled teleportation. It also has the ability to backup and clean the server.log, a big logfile slows down the minecraft server alot, so a regular log rolling is recomended.
 
 
-Requierments
+Requirements
 ------------
 screen,rsync
 
