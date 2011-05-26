@@ -46,6 +46,6 @@ else you might need to mount your own ramdisk.
 		#m 	h 	dom	mon	dow	command
 		02 	05 	*	*	*	/etc/init.d/minecraft backup
 		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
-		*/10 	* 	*	*	*	/etc/init.d/minecraft to-disk
+		*/30 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
 5. Edit the variables in the scriptfile to your needs

@@ -15,37 +15,6 @@
 
 ### Based on http://www.minecraftwiki.net/wiki/Server_startup_script
 
-### REQUIERMENTS
-# screen, rsync
-
-### SETUP
-## There is a couple of things that need to be setup before using this
-## initscript, I'm using Ubuntu server 10.10 so if are to just follow along.
-#
-## Move or symlink the script to /etc/init.d/minecraft
-#
-## Rename your world dir to diskworld and symlink the ramdisk in instead.
-#
-# cd ~/minecraft
-# mv world diskworld
-# ln -s /dev/shm/world world
-#
-## Create the log directory
-# 
-# mkdir logs
-#
-### Setup cron
-#
-# sudo crontab -e 
-# 
-# m 	h	dom	mon	dow	command
-# 02	05	*	*	*	/etc/init.d/minecraft backup
-# 55	04	*	*	*	/etc/init.d/minecraft log-roll
-# */30	*	*	*	*	/etc/init.d/minecraft to-disk
-#
-
-
-### SETTINGS
 
 # Name of server.jar file
 SERVICE='craftbukkit-0.0.1-SNAPSHOT.jar'
