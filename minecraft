@@ -41,7 +41,7 @@
 # m 	h	dom	mon	dow	command
 # 02	05	*	*	*	/etc/init.d/minecraft backup
 # 55	04	*	*	*	/etc/init.d/minecraft log-roll
-# */10	*	*	*	*	/etc/init.d/minecraft to-disk
+# */30	*	*	*	*	/etc/init.d/minecraft to-disk
 #
 
 
@@ -62,6 +62,8 @@ INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPa
 BACKUPPATH='/home/v/minebak'
 # Where the logs are copied when running log-roll 
 LOGPATH="${MCPATH}/logs"
+# Where the whole minecraft directory is copied when whole-backup is runned
+WHOLEBACKUP='/home/v/serverbak'
 # Where the world is located on the disk
 WORLDSTORAGE='/home/v/mine/diskworld'
 #Path to the the mounted ramdisk default in ubuntu: /dev/shm
@@ -76,7 +78,15 @@ as_user() {
 		su - $USERNAME -c "$1"
 	fi
 }
-
+datepath() {
+	# datepath path filending-to-check returned-filending
+	if [ -e $1`date +%x`$2 ]
+	then
+		echo $1`date +%xT%T`$3
+	else
+		echo $1`date +%x`$3
+	fi
+}
 mc_start() {
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
@@ -100,7 +110,6 @@ mc_saveoff() {
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... suspending saves"
-		# as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
 		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-off\"\015'"
 		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
 		sync
@@ -115,7 +124,6 @@ mc_saveon() {
 	then
 		echo "$SERVICE is running... re-enabling saves"
 		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-on\"\015'"
-		# as_user "screen -p 0 -S minecraft -X eval 'stuff \"say World backup complete. \"\015'"
 	else
 		echo "$SERVICE was not running. Not resuming saves."
 	fi
@@ -140,30 +148,17 @@ mc_stop() {
 	fi
 }
 log_roll() {
-	mc_stop
-	DATE=`date "+%Y-%m-%d"`
-	mv $MCPATH/server.log $MCPATH/logs/server-$DATE.log
-	gzip $MCPATH/logs/server-$DATE.log
-	mc_start
+	path=`datepath $MCPATH/logs/server- .log.gz .log`
+	as_user "mv $MCPATH/server.log $path && gzip $path"
+}
+mc_whole_backup() {
+	path=`datepath $WHOLEBACKUP/mine_`
+	as_user "cp -r $MCPATH $path"
 }
 mc_world_backup() {
 	echo "Backing up minecraft world"
-	if [ -e $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 ]
-	then
-		for i in 1 2 3 4 5 6
-		do
-			if [ -e $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 ]
-			then
-				continue
-			else
-				as_user "cd $MCPATH && tar -hcjf $BACKUPPATH/world_`date "+%Y.%m.%d"`-$i.tar.bz2 world"
-				break
-			fi
-		done
-	else
-		as_user "cd $MCPATH && tar -hcjf $BACKUPPATH/world_`date "+%Y.%m.%d"`.tar.bz2 world"
-		echo "Backed up world"
-	fi
+	path=`datepath $BACKUPPATH/world_ .tar.bz2 .tar.bz2`
+	as_user "tar -hcjf $path $MCPATH/world"
 }
 to_ram() {
 	if [ -L $MCPATH/world ]
@@ -201,6 +196,10 @@ case "$1" in
 		mc_saveon
 		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backup complete.\"\015'"
 		;;
+	whole-backup)
+		# Backups everything
+		mc_whole_backup
+		;;
 	to-disk)
 		# Writes from the ramdisk to disk, in case the server crashes. 
 		# Using ramdisk speeds things up alot, especially if you allow
@@ -218,7 +217,7 @@ case "$1" in
 	log-roll)
 		# Moves and Gzips the logfile, a big log file slows down the
 		# server ALOT (what was notch thinking?)
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say ROUTINE REBOOT IN 10 SECONDS.\"\015'"
 		mc_stop
 		log_roll 
 		mc_start
@@ -234,7 +233,7 @@ case "$1" in
 		;;
 
 	*)
-		echo "Usage: /etc/init.d/minecraft {start|stop|backup|log-roll|to-disk|connected|status|restart}"
+		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|log-roll|to-disk|connected|status|restart}"
 		exit 1
 		;;
 esac
