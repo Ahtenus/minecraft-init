@@ -20,12 +20,11 @@
 SERVICE='craftbukkit-0.0.1-SNAPSHOT.jar'
 # User that should run the server
 USERNAME="v"
-# Path to minecraft directory excluding the last ex: /home/v/mine
+# Path to minecraft directory 
 MCPATH='/home/v/mine'
 CPU_COUNT=2
 # Change the values of -Xmx###M and -Xms###M to how mutch ram you want to give to the
-# server, remeber that the world will stored in you ram, so subtract your
-# world size from values.
+# server, remember to make room for the ramdisk
 INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 # Where the world backups should go
 BACKUPPATH='/home/v/minebak'
