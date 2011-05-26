@@ -116,7 +116,7 @@ mc_stop() {
 	fi
 }
 log_roll() {
-	path=`datepath $MCPATH/logs/server- .log.gz .log`
+	path=`datepath $MCPATH/logs/server_ .log.gz .log`
 	as_user "mv $MCPATH/server.log $path && gzip $path"
 }
 mc_whole_backup() {
