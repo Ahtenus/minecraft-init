@@ -26,9 +26,12 @@ Exit the console
 Setup
 =====
 
-1. Move or symlink the script to /etc/init.d/minecraft
+1. Move or symlink the script to `/etc/init.d/minecraft`, set the required premissions and update rc.d.
 
-2. Mount a ramdisk or use the premounted /dev/shm
+	chmod 755 /etc/init.d/minecraft
+	update-rc.d minecraft defaults
+
+2. Mount a ramdisk or use the one premounted at `/dev/shm/`
 
 3. Rename your world dir to diskworld and symlink the ramdisk in instead.
 
