@@ -131,11 +131,13 @@ mc_world_backup() {
 to_ram() {
 	if [ -L $MCPATH/world ]
 	then
-		as_user "rsync -rvt $WORLDSTORAGE/ $RAMDISK/world"
+		as_user "rsync -rt $WORLDSTORAGE/ $RAMDISK/world"
+		echo "World copied to ram"
 	fi
 }
 to_disk() {
-	as_user "rsync -rvt $MCPATH/world/ $WORLDSTORAGE"
+	as_user "rsync -rt $MCPATH/world/ $WORLDSTORAGE"
+	echo "World copied to disk"
 }
 
 case "$1" in
