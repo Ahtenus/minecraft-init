@@ -23,8 +23,9 @@ USERNAME="v"
 # Path to minecraft directory 
 MCPATH='/home/v/mine'
 CPU_COUNT=2
-# Change the values of -Xmx###M and -Xms###M to how mutch ram you want to give to the
-# server, remember to make room for the ramdisk
+# Change the values of -Xmx###M and -Xms###M to how much ram you want to give to the
+# server. Remember to give the ramdisk enough space. Subtract from the total amount 
+# of RAM available the size of your map and the RAM-consumption of your base system.
 INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 # Where the world backups should go
 BACKUPPATH='/home/v/minebak'
@@ -34,7 +35,7 @@ LOGPATH="${MCPATH}/logs"
 WHOLEBACKUP='/home/v/serverbak'
 # Where the world is located on the disk
 WORLDSTORAGE='/home/v/mine/diskworld'
-#Path to the the mounted ramdisk default in ubuntu: /dev/shm
+#Path to the the mounted ramdisk default in Ubuntu: /dev/shm
 RAMDISK='/dev/shm'
 
 
@@ -172,7 +173,7 @@ case "$1" in
 		;;
 	to-disk)
 		# Writes from the ramdisk to disk, in case the server crashes. 
-		# Using ramdisk speeds things up alot, especially if you allow
+		# Using ramdisk speeds things up a lot, especially if you allow
 		# teleportation on the server.
 		mc_saveoff
 		to_disk
@@ -186,7 +187,7 @@ case "$1" in
 		;;
 	log-roll)
 		# Moves and Gzips the logfile, a big log file slows down the
-		# server ALOT (what was notch thinking?)
+		# server A LOT (what was notch thinking?)
 		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say ROUTINE REBOOT IN 10 SECONDS.\"\015'"
 		mc_stop
 		log_roll 
