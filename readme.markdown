@@ -39,9 +39,7 @@ Setup
 		mv world diskworld
 		ln -s /dev/shm/world world
 
-4. Create the log directory
-
-		mkdir logs
+4. Create nessesary directorys for logs and backups
 
 5. Edit crontab
 
@@ -55,3 +53,7 @@ Setup
 		*/30 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
 6. Edit the variables in the scriptfile to your needs
+
+Good stuff
+==========
+[Backup rotation script](https://github.com/adamfeuer/rotate-backups)
