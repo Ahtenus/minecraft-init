@@ -15,7 +15,7 @@ Requirements
 screen,rsync
 
 Access server console
----------------------
+=====================
 
 	screen -r minecraft
 
@@ -39,7 +39,7 @@ Setup
 		mv world diskworld
 		ln -s /dev/shm/world world
 
-4. Create nessesary directorys for logs and backups
+4. Create necessary directorys for logs and backups
 
 5. Edit crontab
 
