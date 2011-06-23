@@ -17,26 +17,26 @@
 
 
 # Name of server.jar file
-SERVICE='craftbukkit-0.0.1-SNAPSHOT.jar'
+SERVICE="craftbukkit-0.0.1-SNAPSHOT.jar"
 # User that should run the server
 USERNAME="v"
 # Path to minecraft directory 
-MCPATH='/home/v/mine'
+MCPATH="/home/${USERNAME}/mine"
 CPU_COUNT=2
 # Change the values of -Xmx###M and -Xms###M to how much ram you want to give to the
 # server. Remember to give the ramdisk enough space. Subtract from the total amount 
 # of RAM available the size of your map and the RAM-consumption of your base system.
 INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 # Where the world backups should go
-BACKUPPATH='/home/v/minebak'
+BACKUPPATH="/home/${USERNAME}/minebak"
 # Where the logs are copied when running log-roll 
 LOGPATH="${MCPATH}/logs"
 # Where the whole minecraft directory is copied when whole-backup is runned
-WHOLEBACKUP='/home/v/serverbak'
+WHOLEBACKUP="/home/${USERNAME}/serverbak"
 # Where the world is located on the disk
-WORLDSTORAGE='/home/v/mine/diskworld'
+WORLDSTORAGE="/home/${USERNAME}/mine/diskworld"
 #Path to the the mounted ramdisk default in Ubuntu: /dev/shm
-RAMDISK='/dev/shm'
+RAMDISK="/dev/shm"
 
 
 ME=`whoami`
