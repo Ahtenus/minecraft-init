@@ -117,15 +117,18 @@ mc_stop() {
 	fi
 }
 log_roll() {
-	path=`datepath $MCPATH/logs/server_ .log.gz .log`
+	as_user "mkdir -p $LOGPATH"
+	path=`datepath $LOGPATH/server_ .log.gz .log`
 	as_user "mv $MCPATH/server.log $path && gzip $path"
 }
 mc_whole_backup() {
+	as_user "mkdir -p $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
 	as_user "cp -r $MCPATH $path"
 }
 mc_world_backup() {
 	echo "Backing up minecraft world"
+	as_user "mkdir -p $BACKUPPATH"
 	path=`datepath $BACKUPPATH/world_ .tar.bz2 .tar.bz2`
 	as_user "tar -hcjf $path $MCPATH/world"
 }
@@ -139,6 +142,48 @@ to_ram() {
 to_disk() {
 	as_user "rsync -rt $MCPATH/world/ $WORLDSTORAGE"
 	echo "World copied to disk"
+}
+mc_update() {
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		echo "$SERVICE is running! Will not start update."
+	else
+		### update minecraft_server.jar
+		echo "Updating minecraft_server.jar...."
+		MC_SERVER_URL=http://minecraft.net/`wget -q -O - http://www.minecraft.net/download.jsp | grep minecraft_server.jar\</a\> | cut -d \" -f 2`
+		as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
+		if [ -f $MCPATH/minecraft_server.jar.update ]
+		then
+			if `diff $MCPATH/minecraft_server.jar $MCPATH/minecraft_server.jar.update >/dev/null`
+			then
+				echo "You are already running the latest version of the Minecraft server."
+				as_user "rm $MCPATH/minecraft_server.jar.update"
+			else
+				as_user "mv $MCPATH/minecraft_server.jar.update $MCPATH/minecraft_server.jar"
+				echo "Minecraft successfully updated."
+			fi
+		else
+			echo "Minecraft update could not be downloaded."
+		fi
+
+		### update craftbukkit
+
+		echo "Updating craftbukkit...."
+		as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update http://ci.bukkit.org/job/dev-CraftBukkit/promotion/latest/Recommended/artifact/target/craftbukkit-0.0.1-SNAPSHOT.jar"
+		if [ -f $MCPATH/craftbukkit.jar.update ]
+		then
+			if `diff $MCPATH/craftbukkit-0.0.1-SNAPSHOT.jar $MCPATH/craftbukkit.jar.update > /dev/null`
+			then
+				echo "You are already running the latest version of CraftBukkit."
+				as_user "rm $MCPATH/craftbukkit.jar.update"
+			else
+				as_user "mv $MCPATH/craftbukkit.jar.update $MCPATH/craftbukkit-0.0.1-SNAPSHOT.jar"
+				echo "CraftBukkit successfully updated."
+			fi
+		else
+			echo "CraftBukkit update could not be downloaded."
+		fi
+	fi
 }
 
 case "$1" in
@@ -168,8 +213,17 @@ case "$1" in
 		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backup complete.\"\015'"
 		;;
 	whole-backup)
-		# Backups everything
+		# Backup everything
 		mc_whole_backup
+		;;
+	update)
+		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
+		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
+		mc_stop
+		to_disk
+		mc_whole_backup
+		mc_update
+		mc_start
 		;;
 	to-disk)
 		# Writes from the ramdisk to disk, in case the server crashes. 
@@ -204,7 +258,7 @@ case "$1" in
 		;;
 
 	*)
-		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|log-roll|to-disk|connected|status|restart}"
+		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|update|log-roll|to-disk|connected|status|restart}"
 		exit 1
 		;;
 esac

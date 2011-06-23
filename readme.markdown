@@ -39,9 +39,7 @@ Setup
 		mv world diskworld
 		ln -s /dev/shm/world world
 
-4. Create necessary directorys for logs and backups
-
-5. Edit crontab
+4. Edit crontab
 
 		sudo crontab -e
 
@@ -52,7 +50,7 @@ Setup
 		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
 		*/30 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
-6. Edit the variables in the scriptfile to your needs
+5. Edit the variables in the scriptfile to your needs
 
 Good stuff
 ==========
