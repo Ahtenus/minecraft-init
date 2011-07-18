@@ -256,9 +256,11 @@ case "$1" in
 			echo "$SERVICE is not running."
 		fi
 		;;
-
+	version)
+		echo Craftbukkit version `awk '/Craftbukkit/ {sub(/\)/, ""); print $12}' $MCPATH/server.log`
+		;;
 	*)
-		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|update|log-roll|to-disk|connected|status|restart}"
+		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|update|log-roll|to-disk|connected|status|restart|version}"
 		exit 1
 		;;
 esac
