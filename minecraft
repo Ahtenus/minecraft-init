@@ -13,28 +13,58 @@
 # Description:    Init script for minecraft/bukkit server, with rolling logs and use of ramdisk for less lag. 
 ### END INIT INFO
 
+### Created by Ahtenus
+
 ### Based on http://www.minecraftwiki.net/wiki/Server_startup_script
+### Support for multiworld by Benni-chan
 
+### INSTRUCTIONS
+## move your worlds to the folder, you specified in WORLDSTORAGE
+#
+## Edit crontab:
+# sudo crontab -e
+#
+## Add something similar to the examples below:
+### CRONTAB EXAMPLES
+# m  h   dom mon dow command
+# 02  05  *   *   *   /etc/init.d/minecraft backup
+# 55  04  *   *   *   /etc/init.d/minecraft log-roll
+# */30    *   *   *   *   /etc/init.d/minecraft to-disk
 
+#############################
+######### SETTINGS ##########
+#############################
 # Name of server.jar file
 SERVICE="craftbukkit-0.0.1-SNAPSHOT.jar"
+# Name to use for the screen instance
+SCREEN="minecraft"
 # User that should run the server
 USERNAME="v"
 # Path to minecraft directory 
-MCPATH="/home/${USERNAME}/mine"
+MCPATH="/home/${USERNAME}/minecraft"
+# Number of CPUs/cores to use
 CPU_COUNT=2
-# Change the values of -Xmx###M and -Xms###M to how much ram you want to give to the
-# server. Remember to give the ramdisk enough space. Subtract from the total amount 
+# Initial memory usage
+INITMEM="1024M"
+# Minimum amount of memory to use
+MINMEM="1024M"
+# Remember: give the ramdisk enough space, subtract from the total amount
 # of RAM available the size of your map and the RAM-consumption of your base system.
-INVOCATION="java -Xmx760M -Xms760M -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
+INVOCATION="java -Xmx$MAXMEM -Xms$INITMEM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 # Where the world backups should go
 BACKUPPATH="/home/${USERNAME}/minebak"
 # Where the logs are copied when running log-roll 
 LOGPATH="${MCPATH}/logs"
-# Where the whole minecraft directory is copied when whole-backup is runned
+# Where the whole minecraft directory is copied when whole-backup is executed
 WHOLEBACKUP="/home/${USERNAME}/serverbak"
-# Where the world is located on the disk
-WORLDSTORAGE="/home/${USERNAME}/mine/diskworld"
+# Where the worlds are located on the disk
+WORLDSTORAGE="${MCPATH}/worldstorage"
+# name of the world
+WORLDNAME[1]="world"
+WORLDNAME[2]="world_nether"
+# copy world to ramdisk?
+WORLDRAM[1]=true
+WORLDRAM[2]=false
 #Path to the the mounted ramdisk default in Ubuntu: /dev/shm
 RAMDISK="/dev/shm"
 
@@ -49,7 +79,7 @@ as_user() {
 }
 datepath() {
 	# datepath path filending-to-check returned-filending
-	if [ -e $1`date +%x`$2 ]
+	if [ -e $1`date +%F`$2 ]
 	then
 		echo $1`date +%FT%T`$3
 	else
@@ -62,9 +92,8 @@ mc_start() {
 		echo "Tried to start but $SERVICE was already running!"
 	else
 		echo "$SERVICE was not running... starting."
-		# rsync -tr $MCPATH/world-disc /dev/shm/
 		cd $MCPATH
-		as_user "cd $MCPATH && screen -dmS minecraft $INVOCATION"
+		as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
 		sleep 7
 		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 		then
@@ -79,8 +108,8 @@ mc_saveoff() {
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... suspending saves"
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-off\"\015'"
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-off\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
 		sync
 		sleep 10
 	else
@@ -92,7 +121,7 @@ mc_saveon() {
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... re-enabling saves"
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-on\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-on\"\015'"
 	else
 		echo "$SERVICE was not running. Not resuming saves."
 	fi
@@ -102,9 +131,9 @@ mc_stop() {
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
 		echo "$SERVICE is running... stopping."
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"save-all\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
 		sleep 10
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"stop\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
 		sleep 7
 	else
 		echo "$SERVICE was not running."
@@ -127,21 +156,62 @@ mc_whole_backup() {
 	as_user "cp -r $MCPATH $path"
 }
 mc_world_backup() {
-	echo "Backing up minecraft world"
-	as_user "mkdir -p $BACKUPPATH"
-	path=`datepath $BACKUPPATH/world_ .tar.bz2 .tar.bz2`
-	as_user "tar -hcjf $path $MCPATH/world"
+	for INDEX in ${!WORLDNAME[@]}
+	do
+		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
+		as_user "mkdir -p $BACKUPPATH"
+		path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
+		as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+	done
+}
+check_links() {
+	for INDEX in ${!WORLDNAME[@]}
+	do
+		if [[ -L $MCPATH/${WORLDNAME[$INDEX]} || ! -a $MCPATH/${WORLDNAME[$INDEX]} ]]
+		then
+			link=`ls -l $MCPATH/${WORLDNAME[$INDEX]} | awk '{print $11}'`
+			if ${WORLDRAM[$INDEX]}
+			then
+				if [ "$link" != "$RAMDISK/${WORLDNAME[$INDEX]}" ]
+				then
+					as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
+					as_user "ln -s $RAMDISK/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
+					echo "created link for ${WORLDNAME[$INDEX]}"
+				fi
+			else
+				if [ "$link" != "${WORLDSTORAGE}/${WORLDNAME[$INDEX]}" ]
+				then
+					as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
+					as_user "ln -s ${WORLDSTORAGE}/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
+					echo "created link for ${WORLDNAME[$INDEX]}"
+				fi
+			fi
+		else
+			echo "could not process ${WORLDNAME[$INDEX]}. please move all worlds to ${WORLDSTORAGE}."
+			exit 1
+		fi
+	done
+	echo "links checked"
 }
 to_ram() {
-	if [ -L $MCPATH/world ]
-	then
-		as_user "rsync -rt $WORLDSTORAGE/ $RAMDISK/world"
-		echo "World copied to ram"
-	fi
+	for INDEX in ${!WORLDNAME[@]}
+	do
+		if ${WORLDRAM[$INDEX]}
+		then
+			if [ -L $MCPATH/${WORLDNAME[$INDEX]} ]
+			then
+				as_user "rsync -rt ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}/ $RAMDISK/${WORLDNAME[$INDEX]}"
+				echo "${WORLDNAME[$INDEX]} copied to ram"
+			fi
+		fi
+	done
 }
 to_disk() {
-	as_user "rsync -rt $MCPATH/world/ $WORLDSTORAGE"
-	echo "World copied to disk"
+	for INDEX in ${!WORLDNAME[@]}
+	do
+		as_user "rsync -rt $MCPATH/${WORLDNAME[$INDEX]}/ ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}"
+		echo "${WORLDNAME[$INDEX]} copied to disk"
+	done
 }
 mc_update() {
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
@@ -189,28 +259,30 @@ mc_update() {
 case "$1" in
 	start)
 		# Starts the server
+		check_links
 		to_ram
 		mc_start
 		;;
 	stop)
 		# Stops the server
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
 		mc_stop
 		to_disk
 		;;
 	restart)
 		# Restarts the server
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
 		mc_stop
 		mc_start
 		;;
 	backup)
 		# Backups world
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backing up world.\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
 		mc_saveoff
+		to_disk
 		mc_world_backup
 		mc_saveon
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say Backup complete.\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
 		;;
 	whole-backup)
 		# Backup everything
@@ -235,17 +307,22 @@ case "$1" in
 		;;
 	connected)
 		# Lists connected users
-		as_user "screen -p 0 -S minecraft -X eval 'stuff list\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
 		sleep 3s
 		tac $MCPATH/server.log | grep -m 1 "Connected"
 		;;
 	log-roll)
 		# Moves and Gzips the logfile, a big log file slows down the
 		# server A LOT (what was notch thinking?)
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say ROUTINE REBOOT IN 10 SECONDS.\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say ROUTINE REBOOT IN 10 SECONDS.\"\015'"
 		mc_stop
-		log_roll 
+		log_roll
 		mc_start
+		;;
+	last)
+		# greps for recently logged in users
+		echo Recently logged in users:
+		cat $MCPATH/server.log | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
 		;;
 	status)
 		# Shows server status
@@ -259,8 +336,28 @@ case "$1" in
 	version)
 		echo Craftbukkit version `awk '/Craftbukkit/ {sub(/\)/, ""); print $12}' $MCPATH/server.log`
 		;;
+	links)
+		check_links
+		;;
+	help)
+		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|update|log-roll|to-disk|connected|last|status|restart|version|links}"
+		echo 
+		echo "start - Starts the server"
+		echo "stop - stops the server"
+		echo "restart - restarts the server"
+		echo "backup - backups the worlds defined in the script"
+		echo "whole-backup - backups the whole server folder"
+		echo "update - fetches the latest version of minecraft.jar server and Bukkit"
+		echo "log-roll - Moves and gzips the logfile"
+		echo "to-disk - copies the worlds from the ramdisk to worldstorage"
+		echo "connected - lists connected users"
+		echo "last - lists the 5 most resently logged in users"
+		echo "status - Shows server status"
+		echo "version - returs Bukkit version"
+		echo "links - creates nessesary symlinks"
+		;;
 	*)
-		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|update|log-roll|to-disk|connected|status|restart|version}"
+		echo "No such command see /etc/init.d/minecraft help"
 		exit 1
 		;;
 esac
