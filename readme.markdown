@@ -31,13 +31,9 @@ Setup
 		chmod 755 /etc/init.d/minecraft
 		update-rc.d minecraft defaults
 
-2. Mount a ramdisk or use the one premounted at `/dev/shm/`
+2. Mount a ramdisk or use the one already mounted at `/dev/shm/`
 
-3. Rename your world dir to diskworld and symlink the ramdisk in instead.
-
-		cd ~/minecraft
-		mv world diskworld
-		ln -s /dev/shm/world world
+3. Move your worlds to the folder you specified in WORLDSTORAGE
 
 4. Edit crontab
 

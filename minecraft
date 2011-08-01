@@ -45,15 +45,15 @@ MCPATH="/home/${USERNAME}/minecraft"
 # Number of CPUs/cores to use
 CPU_COUNT=2
 # Initial memory usage
-INITMEM="1024M"
+INITMEM="2048M"
 # Minimum amount of memory to use
-MAXMEM="1024M"
+MAXMEM="2048M"
 # Remember: give the ramdisk enough space, subtract from the total amount
 # of RAM available the size of your map and the RAM-consumption of your base system.
 INVOCATION="java -Xmx$MAXMEM -Xms$INITMEM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
 # Where the world backups should go
 BACKUPPATH="/home/${USERNAME}/minebak"
-# Where the logs are copied when running log-roll 
+# Where the logs are copied with log-roll 
 LOGPATH="${MCPATH}/logs"
 # Where the whole minecraft directory is copied when whole-backup is executed
 WHOLEBACKUP="/home/${USERNAME}/serverbak"
@@ -319,11 +319,6 @@ case "$1" in
 		log_roll
 		mc_start
 		;;
-	last)
-		# greps for recently logged in users
-		echo Recently logged in users:
-		cat $MCPATH/server.log | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
-		;;
 	status)
 		# Shows server status
 		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
@@ -340,18 +335,17 @@ case "$1" in
 		check_links
 		;;
 	help)
-		echo "Usage: /etc/init.d/minecraft {start|stop|backup|whole-backup|update|log-roll|to-disk|connected|last|status|restart|version|links}"
+		echo "Usage: /etc/init.d/minecraft command"
 		echo 
 		echo "start - Starts the server"
 		echo "stop - stops the server"
 		echo "restart - restarts the server"
 		echo "backup - backups the worlds defined in the script"
-		echo "whole-backup - backups the whole server folder"
+		echo "whole-backup - backups the entire server folder"
 		echo "update - fetches the latest version of minecraft.jar server and Bukkit"
 		echo "log-roll - Moves and gzips the logfile"
 		echo "to-disk - copies the worlds from the ramdisk to worldstorage"
 		echo "connected - lists connected users"
-		echo "last - lists the 5 most resently logged in users"
 		echo "status - Shows server status"
 		echo "version - returs Bukkit version"
 		echo "links - creates nessesary symlinks"
