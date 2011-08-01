@@ -13,23 +13,11 @@
 # Description:    Init script for minecraft/bukkit server, with rolling logs and use of ramdisk for less lag. 
 ### END INIT INFO
 
-### Created by Ahtenus
+# Created by Ahtenus
 
-### Based on http://www.minecraftwiki.net/wiki/Server_startup_script
-### Support for multiworld by Benni-chan
+# Based on http://www.minecraftwiki.net/wiki/Server_startup_script
+# Support for multiworld by Benni-chan
 
-### INSTRUCTIONS
-## move your worlds to the folder, you specified in WORLDSTORAGE
-#
-## Edit crontab:
-# sudo crontab -e
-#
-## Add something similar to the examples below:
-### CRONTAB EXAMPLES
-# m  h   dom mon dow command
-# 02  05  *   *   *   /etc/init.d/minecraft backup
-# 55  04  *   *   *   /etc/init.d/minecraft log-roll
-# */30    *   *   *   *   /etc/init.d/minecraft to-disk
 
 #############################
 ######### SETTINGS ##########
@@ -59,7 +47,7 @@ LOGPATH="${MCPATH}/logs"
 WHOLEBACKUP="/home/${USERNAME}/serverbak"
 # Where the worlds are located on the disk
 WORLDSTORAGE="${MCPATH}/worldstorage"
-# name of the world
+# folder names of the world
 WORLDNAME[1]="world"
 WORLDNAME[2]="world_nether"
 # copy world to ramdisk?
