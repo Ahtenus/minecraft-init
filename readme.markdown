@@ -46,7 +46,7 @@ Setup
 		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
 		*/30 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
-5. Edit the variables in the scriptfile to your needs
+5. Edit the variables in the script file to your needs
 
 Good stuff
 ==========
