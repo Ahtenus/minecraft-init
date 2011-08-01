@@ -47,7 +47,7 @@ CPU_COUNT=2
 # Initial memory usage
 INITMEM="1024M"
 # Minimum amount of memory to use
-MINMEM="1024M"
+MAXMEM="1024M"
 # Remember: give the ramdisk enough space, subtract from the total amount
 # of RAM available the size of your map and the RAM-consumption of your base system.
 INVOCATION="java -Xmx$MAXMEM -Xms$INITMEM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
