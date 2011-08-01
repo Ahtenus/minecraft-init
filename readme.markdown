@@ -33,7 +33,7 @@ Setup
 
 2. Mount a ramdisk or use the one already mounted at `/dev/shm/`
 
-3. Move your worlds to the folder you specified in WORLDSTORAGE
+3. Move your worlds to the folder specified by `WORLDSTORAGE`
 
 4. Edit crontab
 
