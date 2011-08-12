@@ -34,7 +34,7 @@ MCPATH="/home/${USERNAME}/minecraft"
 CPU_COUNT=2
 # Initial memory usage
 INITMEM="2048M"
-# Minimum amount of memory to use
+# Maximum amount of memory to use
 MAXMEM="2048M"
 # Remember: give the ramdisk enough space, subtract from the total amount
 # of RAM available the size of your map and the RAM-consumption of your base system.
