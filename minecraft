@@ -45,7 +45,7 @@ BACKUPPATH="/home/${USERNAME}/minebak"
 LOGPATH="${MCPATH}/logs"
 # Where the whole minecraft directory is copied when whole-backup is executed
 WHOLEBACKUP="/home/${USERNAME}/serverbak"
-# Where the worlds are located on the disk
+# Where the worlds are located on the disk can not be the same as MCPATH.
 WORLDSTORAGE="${MCPATH}/worldstorage"
 # folder names of the world
 WORLDNAME[1]="world"
