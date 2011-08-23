@@ -214,6 +214,16 @@ mc_stop() {
 	echo "$SERVICE is now shut down."
 }
 
+mc_reload() {
+        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+        then
+                echo "$SERVICE is running... reloading."
+                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"reload\"\015'"
+        else
+                echo "$SERVICE was not running."
+        fi
+}
+
 check_backup_settings() {
 	case "$BACKUPFORMAT" in
 		tar)
@@ -662,6 +672,11 @@ case "$1" in
 		to_ram
 		mc_start
 		;;
+        reload)
+                # Reloads server configuration
+                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Reloading configurations..\"\015'"
+                mc_reload
+                ;;
 	whitelist)
 		if is_running; then
 			whitelist
