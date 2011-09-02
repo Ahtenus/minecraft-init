@@ -48,6 +48,8 @@ Setup
 
 5. Edit the variables in the script file to your needs
 
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=Ahtenus&url=https://github.com/Ahtenus/minecraft-init&title=minecraft-init&language=en_GB&tags=github&category=software) 
+
 Good stuff
 ==========
 [Backup rotation script](https://github.com/adamfeuer/rotate-backups)
