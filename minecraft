@@ -45,17 +45,12 @@ BACKUPPATH="/home/${USERNAME}/minebak"
 LOGPATH="${MCPATH}/logs"
 # Where the whole minecraft directory is copied when whole-backup is executed
 WHOLEBACKUP="/home/${USERNAME}/serverbak"
-# Where the worlds are located on the disk can not be the same as MCPATH.
+# Where the worlds are located on the disk. Can not be the same as MCPATH.
 WORLDSTORAGE="${MCPATH}/worldstorage"
-# folder names of the world
-WORLDNAME[1]="world"
-WORLDNAME[2]="world_nether"
-# copy world to ramdisk?
-WORLDRAM[1]=true
-WORLDRAM[2]=false
-#Path to the the mounted ramdisk default in Ubuntu: /dev/shm
+# Path to the the mounted ramdisk default in Ubuntu: /dev/shm
 RAMDISK="/dev/shm"
-
+# use tar or zip files for world backup
+BACKUPFORMAT="tar"
 
 ME=`whoami`
 as_user() {
@@ -138,21 +133,52 @@ log_roll() {
 	path=`datepath $LOGPATH/server_ .log.gz .log`
 	as_user "mv $MCPATH/server.log $path && gzip $path"
 }
+get_worlds() {
+	a=1
+	for NAME in $(ls $WORLDSTORAGE)
+	do
+		if [ -d $WORLDSTORAGE/$NAME ]
+		then
+			WORLDNAME[$a]=$NAME
+			if [ -e $WORLDSTORAGE/$NAME/ramdisk ]
+			then
+				WORLDRAM[$a]=true
+			else
+				WORLDRAM[$a]=false
+			fi
+			a=$a+1
+		fi
+	done
+}
 mc_whole_backup() {
 	as_user "mkdir -p $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
-	as_user "cp -r $MCPATH $path"
+	as_user "cp -rP $MCPATH $path"
 }
 mc_world_backup() {
+	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
 		as_user "mkdir -p $BACKUPPATH"
-		path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
-		as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+		
+		case "$BACKUPFORMAT" in
+			tar)
+				path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
+				as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+				;;
+			zip)
+				path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .zip .zip`
+				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
+				;;
+			*)
+				echo "$BACKUPFORMAT is no supported backup format"
+				;;
+		esac
 	done
 }
 check_links() {
+	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		if [[ -L $MCPATH/${WORLDNAME[$INDEX]} || ! -a $MCPATH/${WORLDNAME[$INDEX]} ]]
@@ -182,22 +208,24 @@ check_links() {
 	echo "links checked"
 }
 to_ram() {
+	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		if ${WORLDRAM[$INDEX]}
 		then
 			if [ -L $MCPATH/${WORLDNAME[$INDEX]} ]
 			then
-				as_user "rsync -rt ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}/ $RAMDISK/${WORLDNAME[$INDEX]}"
+				as_user "rsync -rt --exclude 'ramdisk' ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}/ $RAMDISK/${WORLDNAME[$INDEX]}"
 				echo "${WORLDNAME[$INDEX]} copied to ram"
 			fi
 		fi
 	done
 }
 to_disk() {
+	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
-		as_user "rsync -rt $MCPATH/${WORLDNAME[$INDEX]}/ ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}"
+		as_user "rsync -rt --exclude 'ramdisk' $MCPATH/${WORLDNAME[$INDEX]}/ ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}"
 		echo "${WORLDNAME[$INDEX]} copied to disk"
 	done
 }
@@ -243,6 +271,24 @@ mc_update() {
 		fi
 	fi
 }
+change_ramdisk_state() {
+	if [ ! -e $WORLDSTORAGE/$1 ]
+	then
+		echo "World \"$1\" not found."
+		exit 1
+	fi
+	
+	if [ -e $WORLDSTORAGE/$1/ramdisk ]
+	then
+		rm $WORLDSTORAGE/$1/ramdisk
+		echo "removed ramdisk flag from \"$1\""
+	else
+		touch $WORLDSTORAGE/$1/ramdisk
+		echo "added ramdisk flag to \"$1\""
+	fi
+	echo "changes will only take effect after server is restarted."	
+}
+
 
 case "$1" in
 	start)
@@ -261,6 +307,9 @@ case "$1" in
 		# Restarts the server
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
 		mc_stop
+		to_disk
+		check_links
+		to_ram
 		mc_start
 		;;
 	backup)
@@ -278,11 +327,12 @@ case "$1" in
 		;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
-		as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
 		mc_stop
 		to_disk
 		mc_whole_backup
 		mc_update
+		check_links
 		mc_start
 		;;
 	to-disk)
@@ -307,6 +357,11 @@ case "$1" in
 		log_roll
 		mc_start
 		;;
+	last)
+		# greps for recently logged in users
+		echo Recently logged in users:
+		cat $MCPATH/server.log | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
+		;;
 	status)
 		# Shows server status
 		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
@@ -321,6 +376,21 @@ case "$1" in
 		;;
 	links)
 		check_links
+		;;
+	ramdisk)
+		change_ramdisk_state $2
+		;;
+	worlds)
+		get_worlds
+		for INDEX in ${!WORLDNAME[@]}
+		do
+			if ${WORLDRAM[$INDEX]}
+			then
+				echo "${WORLDNAME[$INDEX]} (ramdisk)"
+			else
+				echo ${WORLDNAME[$INDEX]}
+			fi
+		done
 		;;
 	help)
 		echo "Usage: /etc/init.d/minecraft command"
@@ -337,6 +407,9 @@ case "$1" in
 		echo "status - Shows server status"
 		echo "version - returs Bukkit version"
 		echo "links - creates nessesary symlinks"
+		echo "last - shows recently connected users"
+		echo "worlds - shows a list of available worlds"
+		echo "ramdisk WORLD - toggles ramdisk configuration for WORLD"
 		;;
 	*)
 		echo "No such command see /etc/init.d/minecraft help"
