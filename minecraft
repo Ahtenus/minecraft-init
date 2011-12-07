@@ -17,6 +17,7 @@
 
 # Based on http://www.minecraftwiki.net/wiki/Server_startup_script
 # Support for multiworld by Benni-chan
+# Log rolls without needing restarts by Solorvox
 
 
 #############################
@@ -129,9 +130,20 @@ mc_stop() {
 	fi
 }
 log_roll() {
-	as_user "mkdir -p $LOGPATH"
-	path=`datepath $LOGPATH/server_ .log.gz .log`
-	as_user "mv $MCPATH/server.log $path && gzip $path"
+        if [ ! -d $LOGPATH ]; then
+                as_user "mkdir -p $LOGPATH"
+        fi
+        path=`datepath $LOGPATH/server_ .log.gz .log`
+        as_user "cp $MCPATH/server.log $path && gzip $path"
+	# only if previous command was successful
+        if [ $? -eq 0 ]; then
+                # turnacate the existing log without restarting server
+                as_user "cp /dev/null $MCPATH/server.log"
+                as_user "echo \"Previous logs rolled to $path\" > $MCPATH/server.log "
+        else    
+                echo "Failed to rotate logs to $LOGPATH/server_$path.log.gz"
+        fi
+
 }
 get_worlds() {
 	a=1
@@ -352,10 +364,9 @@ case "$1" in
 	log-roll)
 		# Moves and Gzips the logfile, a big log file slows down the
 		# server A LOT (what was notch thinking?)
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say ROUTINE REBOOT IN 10 SECONDS.\"\015'"
-		mc_stop
+		# The existing log is turnacated to 0 file size.
+
 		log_roll
-		mc_start
 		;;
 	last)
 		# greps for recently logged in users
