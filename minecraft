@@ -17,6 +17,7 @@
 
 # Based on http://www.minecraftwiki.net/wiki/Server_startup_script
 # Support for multiworld by Benni-chan
+# Log rolls without needing restarts by Solorvox
 
 
 #############################
@@ -157,18 +158,19 @@ mc_whole_backup() {
 }
 mc_world_backup() {
 	get_worlds
+	today="/`date +%F`"
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
-		as_user "mkdir -p $BACKUPPATH"
+		as_user "mkdir -p $BACKUPPATH${today}"
 		
 		case "$BACKUPFORMAT" in
 			tar)
-				path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
-				as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+				path=`datepath $BACKUPPATH${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
+				as_user "tar -hcjf $path $MCPATH${today}/${WORLDNAME[$INDEX]}"
 				;;
 			zip)
-				path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .zip .zip`
+				path=`datepath $BACKUPPATH/${today}${WORLDNAME[$INDEX]}_ .zip .zip`
 				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			*)
