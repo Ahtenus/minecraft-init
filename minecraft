@@ -169,7 +169,7 @@ mc_whole_backup() {
 }
 mc_world_backup() {
 	get_worlds
-	today="/`date +%F`"
+	today="`date +%F`" # If you don't want a folder for each day change to today=""
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
@@ -178,10 +178,10 @@ mc_world_backup() {
 		case "$BACKUPFORMAT" in
 			tar)
 				path=`datepath $BACKUPPATH${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
-				as_user "tar -hcjf $path $MCPATH${today}/${WORLDNAME[$INDEX]}"
+				as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			zip)
-				path=`datepath $BACKUPPATH/${today}${WORLDNAME[$INDEX]}_ .zip .zip`
+				path=`datepath $BACKUPPATH${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
 				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			*)
