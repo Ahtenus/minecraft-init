@@ -26,12 +26,12 @@ Exit the console
 Setup
 =====
 
-1. Move or symlink the script to `/etc/init.d/minecraft`, set the required premissions and update rc.d.
+1. Symlink the script to `/etc/init.d/minecraft`, set the required premissions and update rc.d.
 
 		chmod 755 /etc/init.d/minecraft
 		update-rc.d minecraft defaults
 
-2. Mount a ramdisk or use the one already mounted at `/dev/shm/`
+2. Edit the variables in config.example to your needs and rename it to config (leaving it in the same folder as the original minecraft script)
 
 3. Move your worlds to the folder specified by `WORLDSTORAGE`
 
@@ -46,9 +46,8 @@ Setup
 		55 	04 	*	*	*	/etc/init.d/minecraft log-roll
 		*/30 	* 	*	*	*	/etc/init.d/minecraft to-disk
 
-5. Edit the variables in the script file to your needs
 
-6. To load a world from ramdisk run:
+5. To load a world from ramdisk run:
 
 		/etc/init.d/minecraft ramdisk WORLDNAME
 	
@@ -63,4 +62,4 @@ For more help with the script, run
 
 Good stuff
 ==========
-[Backup rotation script](https://github.com/adamfeuer/rotate-backups)
+[Backup rotation script](https://github.com/adamfeuer/rotate-backups) Good if you want some kind or rolling of the world backups.

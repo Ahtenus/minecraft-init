@@ -20,38 +20,21 @@
 # Log rolls without needing restarts by Solorvox
 
 
-#############################
-######### SETTINGS ##########
-#############################
-# Name of server.jar file
-SERVICE="craftbukkit-0.0.1-SNAPSHOT.jar"
-# Name to use for the screen instance
-SCREEN="minecraft"
-# User that should run the server
-USERNAME="v"
-# Path to minecraft directory 
-MCPATH="/home/${USERNAME}/minecraft"
-# Number of CPUs/cores to use
-CPU_COUNT=2
-# Initial memory usage
-INITMEM="2048M"
-# Maximum amount of memory to use
-MAXMEM="2048M"
-# Remember: give the ramdisk enough space, subtract from the total amount
-# of RAM available the size of your map and the RAM-consumption of your base system.
-INVOCATION="java -Xmx$MAXMEM -Xms$INITMEM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
-# Where the world backups should go
-BACKUPPATH="/home/${USERNAME}/minebak"
-# Where the logs are copied with log-roll 
-LOGPATH="${MCPATH}/logs"
-# Where the whole minecraft directory is copied when whole-backup is executed
-WHOLEBACKUP="/home/${USERNAME}/serverbak"
-# Where the worlds are located on the disk. Can not be the same as MCPATH.
-WORLDSTORAGE="${MCPATH}/worldstorage"
-# Path to the the mounted ramdisk default in Ubuntu: /dev/shm
-RAMDISK="/dev/shm"
-# use tar or zip files for world backup
-BACKUPFORMAT="tar"
+# Loads config file
+
+if [ -L $0 ]
+then
+	source `readlink $0 | sed "s:[^/]*$:config:"`
+else
+	source `echo $0 | sed "s:[^/]*$:config:"`
+fi
+
+if [ "$SERVICE" == "" ]
+then
+	echo "Couldn't load config file, please edit config.example and rename it to config"
+	exit
+fi
+
 
 ME=`whoami`
 as_user() {
