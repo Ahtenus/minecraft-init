@@ -7,8 +7,13 @@
 # and rename this file to config
 #
 
-# Name of server.jar file 
-SERVICE="craftbukkit-0.0.1-SNAPSHOT.jar"
+
+# Name of vanilla server jar (no need to change if you're running craftbukkit and vice versa)
+MC_JAR="minecraft_server.jar"
+# Name of craftbukkit jar 
+CB_JAR="craftbukkit_server.jar"
+# Name of server.jar to use (either $MC_JAR or $CB_JAR)
+SERVICE=$CB_JAR
 # Name to use for the screen instance
 SCREEN="minecraft"
 # User that should run the server
