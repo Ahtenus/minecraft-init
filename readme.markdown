@@ -26,7 +26,7 @@ Exit the console
 Setup
 =====
 
-1. Symlink the script to `/etc/init.d/minecraft`, set the required premissions and update rc.d.
+1. Symlink the minecraft file to `/etc/init.d/minecraft`, set the required premissions and update rc.d.
 
 		chmod 755 /etc/init.d/minecraft
 		update-rc.d minecraft defaults
