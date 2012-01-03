@@ -31,7 +31,7 @@ Setup
 		chmod 755 /etc/init.d/minecraft
 		update-rc.d minecraft defaults
 
-2. Edit the variables in config.example to your needs and rename it to config (leaving it in the same folder as the original minecraft script)
+2. Edit the variables in `config.example` to your needs and rename it to `config` (leaving it in the same folder as the original minecraft script)
 
 3. Move your worlds to the folder specified by `WORLDSTORAGE`
 
