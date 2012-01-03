@@ -1,14 +1,15 @@
-Initscript for minecraft/bukkit servers
+Init script for minecraft/bukkit servers
 =======================================
-A good start if you plan to run a minecraft server using Linux.
-Moving this scriptfile to /etc/init.d will start the minecraftserver at boot.
+A init script that apart form starting and stopping the server corretly also has some extra features
+for runnig a mincraft/craftbukkit server.
 
-The initscript will make the server use a ramdisk to contain the world.
-Ramdisk is a part of the ram mounted as a disk and will speed up the
-server especially if you've enabled teleportation. It also has the
-ability to backup and clean the server.log. A big logfile slows down the
-server alot.
+Features
+--------
 
+ * Utilization of ramdisk for world data, decreases lag when getting world chunks.
+ * Cleaning of server.log, a big logfile slows down the server.
+ * Backup for worlds
+ * Server updating and complete backup
 
 Requirements
 ------------
@@ -62,4 +63,4 @@ For more help with the script, run
 
 Good stuff
 ==========
-[Backup rotation script](https://github.com/adamfeuer/rotate-backups) Good if you want some kind or rolling of the world backups.
+[Backup rotation script](https://github.com/adamfeuer/rotate-backups) good if you want some kind or rolling of the world backups.
