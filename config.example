@@ -41,3 +41,10 @@ WORLDSTORAGE="${MCPATH}/worldstorage"
 BACKUPFORMAT="tar"
 # Path to the the mounted ramdisk (the default will work in most senarios).
 RAMDISK="/dev/shm"
+
+# Where the Map is generated
+OUTPUT_MAP="/home/${USERNAME}/mcmap"
+# Path to Minecraft-Overviewer
+OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
+# Name of the World to overview
+OVWORLD="world"
