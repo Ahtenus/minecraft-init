@@ -287,6 +287,33 @@ change_ramdisk_state() {
 	fi
 	echo "changes will only take effect after server is restarted."	
 }
+start_overviewer() {
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		echo "$SERVICE is running! Will not start Overviewer."
+	else
+
+		if [ ! -e $OVPATH/overviewer.py ]
+		then
+			echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
+			exit 1
+		fi
+
+		if [ ! -e $WORLDSTORAGE/$1 ]
+		then
+			echo "World \"$1\" not found."
+			exit 1
+		fi
+		if [ ! -e $OUTPUTMAP ]
+		then
+			as_user "mkdir -p $OUTPUTMAP"
+		fi
+		echo "Start generating map with Minecraft-Overviewer"
+		as_user "python $OVPATH/overviewer.py $WORLDSTORAGE/$1 $OUTPUTMAP" > /dev/null
+		echo "Map generated"
+
+	fi
+}
 
 
 case "$1" in

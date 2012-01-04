@@ -43,8 +43,8 @@ BACKUPFORMAT="tar"
 RAMDISK="/dev/shm"
 
 # Where the Map is generated
-OUTPUT_MAP="/home/${USERNAME}/mcmap"
+OUTPUTMAP="/home/${USERNAME}/mcmap"
 # Path to Minecraft-Overviewer
 OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
-# Name of the World to overview
-OVWORLD="world"
+# Name of the config file for Overviewer
+OVCONFIG="config.over"
