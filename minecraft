@@ -417,6 +417,15 @@ case "$1" in
 			fi
 		done
 		;;
+	overviewer)
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+		mc_stop
+		to_disk
+		start_overviewer $2
+		check_links
+		to_ram
+		mc_start
+		;;
 	help)
 		echo "Usage: /etc/init.d/minecraft command"
 		echo 
@@ -435,6 +444,7 @@ case "$1" in
 		echo "last - shows recently connected users"
 		echo "worlds - shows a list of available worlds"
 		echo "ramdisk WORLD - toggles ramdisk configuration for WORLD"
+		echo "overviewer WORLD - create a map of the WORLD with Minecraft-Overviewer"
 		;;
 	*)
 		echo "No such command see /etc/init.d/minecraft help"
