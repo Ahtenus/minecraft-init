@@ -41,3 +41,12 @@ WORLDSTORAGE="${MCPATH}/worldstorage"
 BACKUPFORMAT="tar"
 # Path to the the mounted ramdisk (the default will work in most senarios).
 RAMDISK="/dev/shm"
+
+# Where the Map is generated
+OUTPUTMAP="/home/${USERNAME}/mcmap"
+# Path to Minecraft-Overviewer
+OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
+# Path for the config file of Overviewer
+OVCONFIGPATH="/home/${USERNAME}/Minecraft-Overviewer"
+# Name of Overviewer config file
+OVCONFIGNAME="config.over"
