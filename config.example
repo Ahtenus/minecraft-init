@@ -46,5 +46,7 @@ RAMDISK="/dev/shm"
 OUTPUTMAP="/home/${USERNAME}/mcmap"
 # Path to Minecraft-Overviewer
 OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
-# Name of the config file for Overviewer
-OVCONFIG="config.over"
+# Path for the config file of Overviewer
+OVCONFIGPATH="/home/${USERNAME}/Minecraft-Overviewer"
+# Name of Overviewer config file
+OVCONFIGNAME="config.over"
