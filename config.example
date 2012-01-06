@@ -42,7 +42,7 @@ BACKUPFORMAT="tar"
 # Path to the the mounted ramdisk (the default will work in most senarios).
 RAMDISK="/dev/shm"
 
-# Settings for /etc/init.d/minecraft overviewer command
+# Settings for overviewer command
 
 # Where the Map is generated
 OUTPUTMAP="/home/${USERNAME}/mcmap"
