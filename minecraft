@@ -346,6 +346,12 @@ case "$1" in
 		to_ram
 		mc_start
 		;;
+	whitelist-reload)
+		# Reloads the whitelist
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
+	whitelist-add)
+		# Reloads the whitelist
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
 	backup)
 		# Backups world
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
