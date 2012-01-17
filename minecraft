@@ -221,8 +221,11 @@ to_disk() {
 	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
-		as_user "rsync -rt --exclude 'ramdisk' $MCPATH/${WORLDNAME[$INDEX]}/ ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}"
-		echo "${WORLDNAME[$INDEX]} copied to disk"
+		if ${WORLDRAM[$INDEX]}
+		then
+			as_user "rsync -rt --exclude 'ramdisk' $MCPATH/${WORLDNAME[$INDEX]}/ ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}"
+			echo "${WORLDNAME[$INDEX]} copied to disk"
+		fi
 	done
 }
 mc_update() {
