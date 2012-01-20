@@ -44,8 +44,23 @@ as_user() {
 		su - $USERNAME -c "$1"
 	fi
 }
+error_if_running() {
+	# Throws an error and quit the script if the service is running
+	# $1 Error message
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		echo $1 
+		exit 1
+	fi
+}
 datepath() {
 	# datepath path filending-to-check returned-filending
+
+	# Returns an file path with added date between the filename and file ending.
+	# $1 filepath (not including file ending)
+	# $2 file ending to check for uniqueness
+	# $3 file ending to return
+
 	if [ -e $1`date +%F`$2 ]
 	then
 		echo $1`date +%FT%T`$3
@@ -54,20 +69,14 @@ datepath() {
 	fi
 }
 mc_start() {
+	cd $MCPATH
+	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
+	sleep 7
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
-		echo "Tried to start but $SERVICE was already running!"
+		echo "$SERVICE is now running."
 	else
-		echo "$SERVICE was not running... starting."
-		cd $MCPATH
-		as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-		sleep 7
-		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-		then
-			echo "$SERVICE is now running."
-		else
-			echo "Could not start $SERVICE."
-		fi
+		echo "Could not start $SERVICE."
 	fi
 }
 
@@ -330,6 +339,7 @@ start_overviewer() {
 case "$1" in
 	start)
 		# Starts the server
+		error_if_running "Server already running."
 		check_links
 		to_ram
 		mc_start
@@ -360,6 +370,7 @@ case "$1" in
 		;;
 	whole-backup)
 		# Backup everything
+		error_if_running "Can't do that while server is running."
 		mc_whole_backup
 		;;
 	update)
@@ -374,8 +385,6 @@ case "$1" in
 		;;
 	to-disk)
 		# Writes from the ramdisk to disk, in case the server crashes. 
-		# Using ramdisk speeds things up a lot, especially if you allow
-		# teleportation on the server.
 		mc_saveoff
 		to_disk
 		mc_saveon
@@ -387,14 +396,11 @@ case "$1" in
 		tac $MCPATH/server.log | grep -m 1 "Connected"
 		;;
 	log-roll)
-		# Moves and Gzips the logfile, a big log file slows down the
-		# server A LOT (what was notch thinking?)
-		# The existing log is turnacated to 0 file size.
-
+		# Moves and Gzips the logfile
 		log_roll
 		;;
 	last)
-		# greps for recently logged in users
+		# Greps for recently logged in users
 		echo Recently logged in users:
 		cat $MCPATH/server.log | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
 		;;
@@ -438,7 +444,7 @@ case "$1" in
 		mc_start
 		;;
 	help)
-		echo "Usage: /etc/init.d/minecraft command"
+		echo "Usage: $0 command"
 		echo 
 		echo "start - Starts the server"
 		echo "stop - stops the server"
@@ -458,7 +464,7 @@ case "$1" in
 		echo "overviewer WORLD - create a map of the WORLD with Minecraft-Overviewer"
 		;;
 	*)
-		echo "No such command see /etc/init.d/minecraft help"
+		echo "No such command see $0 help"
 		exit 1
 		;;
 esac
