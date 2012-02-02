@@ -72,13 +72,24 @@ datepath() {
 mc_start() {
 	cd $MCPATH
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-	sleep 7
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-	then
-		echo "$SERVICE is now running."
-	else
-		echo "Could not start $SERVICE."
-	fi
+	#
+	# Waiting for the server to start
+	#
+	seconds=0
+	until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	do
+		seconds=$seconds+1
+		if [[ $seconds -eq 5 ]]
+		then
+			echo "Still not running, waiting a while longer..."
+		fi
+		if [[ $seconds -ge 20 ]]
+		then
+			echo "Failed to start, aborting."
+			exit 1
+		fi
+	done	
+	echo "$SERVICE is running."
 }
 
 mc_saveoff() {
@@ -105,22 +116,39 @@ mc_saveon() {
 }
 
 mc_stop() {
+	#
+	# Stops the server, unless it's shut down
+	#
 	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	then
-		echo "$SERVICE is running... stopping."
+		echo "Saving worlds..."
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
 		sleep 10
+		echo "Stopping server..."
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
-		sleep 7
+		sleep 0.5
 	else
 		echo "$SERVICE was not running."
 	fi
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-	then
-		echo "$SERVICE could not be shut down... still running."
-	else
-		echo "$SERVICE is shut down."
-	fi
+	#
+	# Waiting for the server to shut down
+	#
+	seconds=0
+	while ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	do
+		sleep 1 
+		seconds=$seconds+1
+		if [[ $seconds -eq 5 ]]
+		then
+			echo "Still not shut down, waiting a while longer..."
+		fi
+		if [[ $seconds -ge 20 ]]
+		then
+			echo "Failed to shut down, aborting."
+			exit 1
+		fi
+	done	
+	echo "$SERVICE is shut down."
 }
 log_roll() {
         if [ ! -d $LOGPATH ]; then
