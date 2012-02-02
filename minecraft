@@ -144,6 +144,7 @@ mc_stop() {
 		fi
 		if [[ $seconds -ge 20 ]]
 		then
+			logger -t minecraft-init "Failed to shut down server, aborting."
 			echo "Failed to shut down, aborting."
 			exit 1
 		fi
