@@ -32,7 +32,7 @@ fi
 if [ "$SERVICE" == "" ]
 then
 	echo "Couldn't load config file, please edit config.example and rename it to config"
-	logger "minecraft-init: Couldn't load config file, please edit config.example and rename it to config"
+	logger -t minecraft-init "Couldn't load config file, please edit config.example and rename it to config"
 	exit
 fi
 
