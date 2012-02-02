@@ -29,8 +29,9 @@ Setup
 
 1. Symlink the minecraft file to `/etc/init.d/minecraft`, set the required premissions and update rc.d.
 
-		chmod 755 /etc/init.d/minecraft
-		update-rc.d minecraft defaults
+		sudo ln -s ~/minecraft-init/minecraft /etc/init.d/minecraft
+		chmod 755  ~/minecraft-init/minecraft
+		sudo update-rc.d minecraft defaults
 
 2. Edit the variables in `config.example` to your needs and rename it to `config` (leaving it in the same folder as the original minecraft script)
 
@@ -38,9 +39,11 @@ Setup
 
 4. Edit crontab
 
-		sudo crontab -e
+	As the server user:
+	
+		crontab -e
 
-	and add these lines
+	Add these lines:
 
 		#m 	h 	dom	mon	dow	command
 		02 	05 	*	*	*	/etc/init.d/minecraft backup

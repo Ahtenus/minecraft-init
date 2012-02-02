@@ -24,7 +24,7 @@
 
 if [ -L $0 ]
 then
-	source `readlink $0 | sed "s:[^/]*$:config:"`
+	source `readlink -e $0 | sed "s:[^/]*$:config:"`
 else
 	source `echo $0 | sed "s:[^/]*$:config:"`
 fi
@@ -32,6 +32,7 @@ fi
 if [ "$SERVICE" == "" ]
 then
 	echo "Couldn't load config file, please edit config.example and rename it to config"
+	logger "minecraft-init: Couldn't load config file, please edit config.example and rename it to config"
 	exit
 fi
 
