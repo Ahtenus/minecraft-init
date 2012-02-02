@@ -78,12 +78,13 @@ mc_start() {
 	seconds=0
 	until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	do
+		sleep 1 
 		seconds=$seconds+1
 		if [[ $seconds -eq 5 ]]
 		then
 			echo "Still not running, waiting a while longer..."
 		fi
-		if [[ $seconds -ge 20 ]]
+		if [[ $seconds -ge 120 ]]
 		then
 			echo "Failed to start, aborting."
 			exit 1
@@ -142,7 +143,7 @@ mc_stop() {
 		then
 			echo "Still not shut down, waiting a while longer..."
 		fi
-		if [[ $seconds -ge 20 ]]
+		if [[ $seconds -ge 120 ]]
 		then
 			logger -t minecraft-init "Failed to shut down server, aborting."
 			echo "Failed to shut down, aborting."
