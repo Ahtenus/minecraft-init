@@ -428,6 +428,17 @@ case "$1" in
 		to_disk
 		mc_saveon
 		;;
+	save-off)
+		# Flushes the state of the world to disk, and then disables
+		# saving until save-on is called (useful if you have your own
+		# backup scripts).
+		mc_saveoff
+		to_disk
+		;;
+	save-on)
+		# Re-enables saving if it was disabled by save-off.
+		mc_saveon
+		;;
 	connected)
 		# Lists connected users
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
@@ -493,6 +504,8 @@ case "$1" in
 		echo "update - fetches the latest version of minecraft.jar server and Bukkit"
 		echo "log-roll - Moves and gzips the logfile"
 		echo "to-disk - copies the worlds from the ramdisk to worldstorage"
+		echo "save-off - flushes the world to disk and then disables saving until save-on is called"
+		echo "save-on - re-enables saving if it was previously disabled by save-off"
 		echo "connected - lists connected users"
 		echo "status - Shows server status"
 		echo "version - returs Bukkit version"
