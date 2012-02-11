@@ -409,8 +409,12 @@ case "$1" in
 		;;
 	whole-backup)
 		# Backup everything
-		error_if_running "Can't do that while server is running."
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
+		mc_stop
+		to_disk
 		mc_whole_backup
+		check_links
+		mc_start
 		;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
