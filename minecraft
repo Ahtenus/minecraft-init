@@ -365,7 +365,13 @@ start_overviewer() {
 
 	fi
 }
-
+is_running(){
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		return 0
+	fi
+	return 1
+}
 
 case "$1" in
 	start)
@@ -408,14 +414,19 @@ case "$1" in
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
 		;;
 	whole-backup)
-		# Backup everything
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
-		mc_stop
-		to_disk
-		mc_whole_backup
-		check_links
-		mc_start
-		;;
+                # Backup everything
+                if is_running; then
+                    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER$
+                    mc_stop
+                    to_disk
+                    mc_whole_backup
+                    check_links
+                    mc_start
+                else
+                    to_disk
+                    mc_whole_backup
+                fi
+                ;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
