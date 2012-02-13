@@ -416,7 +416,7 @@ case "$1" in
 	whole-backup)
                 # Backup everything
                 if is_running; then
-                    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER$
+                    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
                     mc_stop
                     to_disk
                     mc_whole_backup
