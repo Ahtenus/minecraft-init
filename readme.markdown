@@ -1,19 +1,19 @@
 Init script for minecraft/bukkit servers
 =======================================
-A init script that apart form starting and stopping the server corretly also has some extra features
+A init script that apart form starting and stopping the server correctly also has some extra features
 for running a mincraft/craftbukkit server.
 
 Features
 --------
 
  * Utilization of ramdisk for world data, decreases lag when getting world chunks
- * Cleaning of server.log, a big logfile slows down the server
+ * Cleaning of server.log, a big log file slows down the server
  * Backup for worlds
  * Server updating and complete backup
 
 Requirements
 ------------
-screen,rsync
+screen, rsync
 
 Access server console
 =====================
