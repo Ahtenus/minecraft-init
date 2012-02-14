@@ -14,6 +14,8 @@ MC_JAR="minecraft_server.jar"
 CB_JAR="craftbukkit_server.jar"
 # Name of server.jar to use (either $MC_JAR or $CB_JAR)
 SERVICE=$CB_JAR
+# Define the release of CraftBukkit to use (stable or unstable)
+CB_RELEASE="stable"
 # Name to use for the screen instance
 SCREEN="minecraft"
 # User that should run the server
