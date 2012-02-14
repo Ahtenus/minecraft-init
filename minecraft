@@ -292,11 +292,16 @@ mc_update() {
 		fi
 
 		### update craftbukkit
-
 		echo "Updating craftbukkit...."
-
-		CB_URL="http://ci.bukkit.org/job/dev-CraftBukkit/lastSuccessfulBuild/artifact/target/"
-		CB_SERVER_URL=$CB_URL`wget -q -O - $CB_URL | grep \>craftbukkit | cut -d \" -f 30`
+		case $CB_RELEASE in
+			unstable|UNSTABLE|Unstable|dev|developpment)
+				CB_URL="http://ci.bukkit.org/job/dev-CraftBukkit/lastSuccessfulBuild/artifact/target/"
+				CB_SERVER_URL=$CB_URL`wget -q -O - $CB_URL | grep \>craftbukkit | cut -d \" -f 30`
+				;;
+			*)
+			CB_SERVER_URL="http://cbukk.it/craftbukkit.jar"
+			;;
+		esac
 		as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
 		if [ -f $MCPATH/craftbukkit.jar.update ]
 		then
