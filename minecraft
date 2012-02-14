@@ -479,7 +479,8 @@ case "$1" in
 		fi
 		;;
 	version)
-		echo Craftbukkit version `awk '/Craftbukkit/ {sub(/\)/, ""); print $12}' $MCPATH/server.log`
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+		tac $MCPATH/server.log | grep -m 1 "This server is running"
 		;;
 	links)
 		check_links
