@@ -294,7 +294,7 @@ mc_update() {
 		### update craftbukkit
 		echo "Updating craftbukkit...."
 		case $CB_RELEASE in
-			unstable|UNSTABLE|Unstable|dev|developpment)
+			unstable|UNSTABLE|Unstable|dev|development)
 				CB_URL="http://ci.bukkit.org/job/dev-CraftBukkit/lastSuccessfulBuild/artifact/target/"
 				CB_SERVER_URL=$CB_URL`wget -q -O - $CB_URL | grep \>craftbukkit | cut -d \" -f 30`
 				;;
@@ -484,7 +484,8 @@ case "$1" in
 		fi
 		;;
 	version)
-		echo Craftbukkit version `awk '/Craftbukkit/ {sub(/\)/, ""); print $12}' $MCPATH/server.log`
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+		tac $MCPATH/server.log | grep -m 1 "This server is running"
 		;;
 	links)
 		check_links
