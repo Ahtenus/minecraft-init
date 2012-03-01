@@ -42,7 +42,7 @@ as_user() {
 	if [ $ME == $USERNAME ] ; then
 		bash -c "$1"
 	else
-		su - $USERNAME -c "$1"
+		su - $USERNAME -s $USERSHELL -c "$1"
 	fi
 }
 error_if_running() {

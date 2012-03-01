@@ -20,6 +20,8 @@ CB_RELEASE="stable"
 SCREEN="minecraft"
 # User that should run the server
 USERNAME="v"
+# Shell user should run the server with
+USERSHELL="/bin/sh"
 # Path to minecraft directory 
 MCPATH="/home/${USERNAME}/minecraft"
 # Number of CPUs/cores to use
