@@ -401,10 +401,10 @@ case "$1" in
 		if is_running; then
 			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
 			mc_stop
+			to_disk
 		else
 			echo "No running server, starting it..."
 		fi
-		to_disk
 		check_links
 		to_ram
 		mc_start
