@@ -54,15 +54,6 @@ is_running(){
 	fi
 	return 1
 }
-error_if_running() {
-	# Throws an error and quit the script if the service is running
-	# $1 Error message
-	if is_running
-	then
-		echo $1 
-		exit 1
-	fi
-}
 datepath() {
 	# datepath path filending-to-check returned-filending
 
