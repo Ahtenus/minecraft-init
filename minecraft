@@ -45,10 +45,19 @@ as_user() {
 		su $USERNAME -s /bin/bash -c "$1"
 	fi
 }
+is_running(){
+	# Checks for the minecraft servers screen session
+	# returns true if it exists.
+	if ps ax | grep -v grep | grep "$SCREEN $INVOCATION" > /dev/null
+	then
+		return 0
+	fi
+	return 1
+}
 error_if_running() {
 	# Throws an error and quit the script if the service is running
 	# $1 Error message
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if is_running
 	then
 		echo $1 
 		exit 1
@@ -94,7 +103,7 @@ mc_start() {
 }
 
 mc_saveoff() {
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if is_running
 	then
 		echo "$SERVICE is running... suspending saves"
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-off\"\015'"
@@ -107,7 +116,7 @@ mc_saveoff() {
 }
 
 mc_saveon() {
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if is_running
 	then
 		echo "$SERVICE is running... re-enabling saves"
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-on\"\015'"
@@ -118,19 +127,14 @@ mc_saveon() {
 
 mc_stop() {
 	#
-	# Stops the server, unless it's shut down
+	# Stops the server
 	#
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-	then
-		echo "Saving worlds..."
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
-		sleep 10
-		echo "Stopping server..."
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
-		sleep 0.5
-	else
-		echo "$SERVICE was not running."
-	fi
+	echo "Saving worlds..."
+	as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+	sleep 10
+	echo "Stopping server..."
+	as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
+	sleep 0.5
 	#
 	# Waiting for the server to shut down
 	#
@@ -150,7 +154,7 @@ mc_stop() {
 			exit 1
 		fi
 	done	
-	echo "$SERVICE is shut down."
+	echo "$SERVICE is now shut down."
 }
 log_roll() {
         if [ ! -d $LOGPATH ]; then
@@ -241,7 +245,6 @@ check_links() {
 			exit 1
 		fi
 	done
-	echo "links checked"
 }
 to_ram() {
 	get_worlds
@@ -269,7 +272,7 @@ to_disk() {
 	done
 }
 mc_update() {
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if is_running
 	then
 		echo "$SERVICE is running! Will not start update."
 	else
@@ -336,7 +339,7 @@ change_ramdisk_state() {
 	echo "changes will only take effect after server is restarted."	
 }
 start_overviewer() {
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	if is_running
 	then
 		echo "$SERVICE is running! Will not start Overviewer."
 	else
@@ -370,32 +373,37 @@ start_overviewer() {
 
 	fi
 }
-is_running(){
-	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-	then
-		return 0
-	fi
-	return 1
-}
+
 
 case "$1" in
 	start)
 		# Starts the server
-		error_if_running "Server already running."
-		check_links
-		to_ram
-		mc_start
+		if is_running; then
+			echo "Server already running."
+		else
+			check_links
+			to_ram
+			mc_start
+		fi
 		;;
 	stop)
 		# Stops the server
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
-		mc_stop
-		to_disk
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+			mc_stop
+			to_disk
+		else
+			echo "No running server"
+		fi
 		;;
 	restart)
 		# Restarts the server
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
-		mc_stop
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+			mc_stop
+		else
+			echo "No running server, starting it..."
+		fi
 		to_disk
 		check_links
 		to_ram
@@ -403,44 +411,60 @@ case "$1" in
 		;;
 	whitelist-reload)
 		# Reloads the whitelist
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
+		else
+			echo "No running server"
+		fi
 		;;
 	whitelist-add)
 		# Adds a player to the whitelist
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
+		else
+			echo "No running server"
+		fi
 		;;
 	backup)
 		# Backups world
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
-		mc_saveoff
-		to_disk
-		mc_world_backup
-		mc_saveon
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
+			mc_saveoff
+			to_disk
+			mc_world_backup
+			mc_saveon
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
+		else
+			mc_world_backup
+		fi
 		;;
 	whole-backup)
                 # Backup everything
-                if is_running; then
-                    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
-                    mc_stop
-                    to_disk
-                    mc_whole_backup
-                    check_links
-                    mc_start
-                else
-                    to_disk
-                    mc_whole_backup
-                fi
-                ;;
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
+			mc_stop
+			to_disk
+			mc_whole_backup
+			check_links
+			mc_start
+		else
+			mc_whole_backup
+		fi
+		;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
-		mc_stop
-		to_disk
-		mc_whole_backup
-		mc_update
-		check_links
-		mc_start
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
+			mc_stop
+			to_disk
+			mc_whole_backup
+			mc_update
+			check_links
+			mc_start
+		else
+			mc_whole_backup
+			mc_update
+		fi
 		;;
 	to-disk)
 		# Writes from the ramdisk to disk, in case the server crashes. 
@@ -452,18 +476,30 @@ case "$1" in
 		# Flushes the state of the world to disk, and then disables
 		# saving until save-on is called (useful if you have your own
 		# backup scripts).
-		mc_saveoff
+		if is_running; then
+			mc_saveoff
+		else
+			echo "Server was not running, syncing from ram anyway..."
+		fi
 		to_disk
 		;;
 	save-on)
 		# Re-enables saving if it was disabled by save-off.
-		mc_saveon
+		if is_running; then
+			mc_saveon
+		else
+			echo "No running server."
+		fi
 		;;
 	connected)
 		# Lists connected users
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
-		sleep 3s
-		tac $MCPATH/server.log | grep -m 1 "Connected"
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
+			sleep 3s
+			tac $MCPATH/server.log | grep -m 1 "Connected"
+		else
+			echo "No running server."
+		fi
 		;;
 	log-roll)
 		# Moves and Gzips the logfile
@@ -476,7 +512,7 @@ case "$1" in
 		;;
 	status)
 		# Shows server status
-		if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+		if is_running
 		then
 			echo "$SERVICE is running."
 		else
@@ -484,8 +520,12 @@ case "$1" in
 		fi
 		;;
 	version)
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
-		tac $MCPATH/server.log | grep -m 1 "This server is running"
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+			tac $MCPATH/server.log | grep -m 1 "This server is running"
+		else
+			echo "The server needs to be running to check version."
+		fi
 		;;
 	links)
 		check_links
@@ -506,13 +546,17 @@ case "$1" in
 		done
 		;;
 	overviewer)
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
-		mc_stop
-		to_disk
-		start_overviewer $2
-		check_links
-		to_ram
-		mc_start
+		if is_running; then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+			mc_stop
+			to_disk
+			start_overviewer $2
+			check_links
+			to_ram
+			mc_start
+		else
+			start_overviewer $2
+		fi
 		;;
 	help)
 		echo "Usage: $0 command"
