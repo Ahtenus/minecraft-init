@@ -116,6 +116,16 @@ mc_saveon() {
 	fi
 }
 
+mc_say() {
+	if is_running
+	then
+		echo "Said: $1"
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say $1\"\015'"
+	else
+		echo "$SERVICE was not running. Not able to say anything."
+	fi
+}
+
 mc_stop() {
 	#
 	# Stops the server
@@ -482,6 +492,14 @@ case "$1" in
 			echo "No running server."
 		fi
 		;;
+	say)
+		# Says something to the ingame chat
+		if is_running; then
+			mc_say "$2"
+		else
+			echo "No running server to say anything."
+		fi
+		;;
 	connected)
 		# Lists connected users
 		if is_running; then
@@ -562,6 +580,7 @@ case "$1" in
 		echo "to-disk - copies the worlds from the ramdisk to worldstorage"
 		echo "save-off - flushes the world to disk and then disables saving until save-on is called"
 		echo "save-on - re-enables saving if it was previously disabled by save-off"
+		echo "say - Prints the given string to the ingame chat."
 		echo "connected - lists connected users"
 		echo "status - Shows server status"
 		echo "version - returs Bukkit version"
