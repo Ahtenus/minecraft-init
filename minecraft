@@ -196,8 +196,12 @@ mc_whole_backup() {
 	as_user "cp -rP $MCPATH $path"
 }
 mc_world_backup() {
+	#
+	# Backup the worlds and puts them in a folder for each day (unless $BACKUPSCRIPTCOMPATIBLE is set)
+	#
+
 	get_worlds
-	today="`date +%F`" # If you don't want a folder for each day change to today=""
+	today="`date +%F`"
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
@@ -205,11 +209,23 @@ mc_world_backup() {
 		
 		case "$BACKUPFORMAT" in
 			tar)
-				path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
+				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+					# If isset tars will be put in $BACKUPPATH without any timestamp to be compatible with
+					# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
+				then
+					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.tar.bz2
+				else
+					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
+				fi
 				as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			zip)
-				path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
+				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+				then
+					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.zip
+				else
+					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
+				fi
 				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			*)

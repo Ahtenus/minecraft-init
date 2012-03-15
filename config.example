@@ -3,54 +3,90 @@
 # Settings file for minecraft-init
 # ================================
 # 
-# Change these variables to suit you setup
-# and rename this file to config
+# Make a copy of this file named config
+# and edit the variables to your needs.
 #
-
 
 # Name of vanilla server jar (no need to change if you're running craftbukkit and vice versa)
 MC_JAR="minecraft_server.jar"
+
 # Name of craftbukkit jar 
 CB_JAR="craftbukkit_server.jar"
-# Name of server.jar to use (either $MC_JAR or $CB_JAR)
-SERVICE=$CB_JAR
+
 # Define the release of CraftBukkit to use (stable or unstable)
 CB_RELEASE="stable"
+
+# Name of server.jar to use (either $MC_JAR or $CB_JAR)
+SERVICE=$CB_JAR
+
 # Name to use for the screen instance
 SCREEN="minecraft"
+
 # User that should run the server
-USERNAME="v"
-# Path to minecraft directory 
+USERNAME="minecraft"
+
+# Path to minecraft server directory 
 MCPATH="/home/${USERNAME}/minecraft"
+
 # Number of CPUs/cores to use
 CPU_COUNT=2
+
 # Initial memory usage
 INITMEM="2048M"
+
 # Maximum amount of memory to use
-MAXMEM="2048M"
 # Remember: give the ramdisk enough space, subtract from the total amount
 # of RAM available the size of your map and the RAM-consumption of your base system.
-INVOCATION="java -Xmx$MAXMEM -Xms$INITMEM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
-# Where the world backups should go
-BACKUPPATH="/home/${USERNAME}/minebak"
-# Where the logs are copied with log-roll 
-LOGPATH="${MCPATH}/logs"
+MAXMEM="2048M"
+
+# Location for world backups
+BACKUPPATH="/home/${USERNAME}/mcbackup/worlds"
+
+# Format for world backup (tar or zip).
+BACKUPFORMAT="tar"  
+
+# Normally backups will be put in a subfolder to $BACKUPPATH with todays date
+# and the backups themselves will have a timestamp.
+
+# But if BACKUPSCRIPTCOMPATIBLE is set the world backups will be put directly
+# in $BACKUPPATH without timestamp to be compatible with
+# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
+#
+# BACKUPSCRIPTCOMPATIBLE=YES
+
+# Location for old logs
+# Used by the log-roll command
+LOGPATH="/home/${USERNAME}/mcbackup/logs"
+
 # Where the whole minecraft directory is copied when whole-backup is executed
-WHOLEBACKUP="/home/${USERNAME}/serverbak"
+# whole-backup is a complete uncompressed backup of the whole server folder.
+WHOLEBACKUP="/home/${USERNAME}/mcbackup/server"
+
 # Where the worlds are located on the disk. Can not be the same as MCPATH.
+# You need to move your worlds to this directory manually, the script
+# will then handle the nessessay symlinks.
 WORLDSTORAGE="${MCPATH}/worldstorage"
-# Format to use for world backup (tar or zip).
-BACKUPFORMAT="tar"
-# Path to the the mounted ramdisk (the default will work in most senarios).
-RAMDISK="/dev/shm"
+
 
 # Settings for overviewer command
+# ===============================
 
 # Where the Map is generated
 OUTPUTMAP="/home/${USERNAME}/mcmap"
+
 # Path to Minecraft-Overviewer
 OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
+
 # Path for the config file of Overviewer
 OVCONFIGPATH="/home/${USERNAME}/Minecraft-Overviewer"
+
 # Name of Overviewer config file
 OVCONFIGNAME="config.over"
+
+# Things to leave alone ;)
+# =====================
+
+INVOCATION="java -Xmx$MAXMEM -Xms$INITMEM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVICE nogui"
+
+# Path to the the mounted ramdisk (the default will work in most senarios).
+RAMDISK="/dev/shm"
