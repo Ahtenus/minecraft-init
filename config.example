@@ -81,7 +81,10 @@ OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
 OVCONFIGPATH="/home/${USERNAME}/Minecraft-Overviewer"
 
 # Name of Overviewer config file
-OVCONFIGNAME="config.over"
+OVCONFIGNAME="config_over.py"
+
+# Path for backup worlds
+OVBACKUP="/home/${USERNAME}/mcbackup/overviewer"
 
 # Things to leave alone ;)
 # =====================

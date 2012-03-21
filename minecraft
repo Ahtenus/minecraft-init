@@ -356,41 +356,48 @@ change_ramdisk_state() {
 	fi
 	echo "changes will only take effect after server is restarted."	
 }
-start_overviewer() {
-	if is_running
+overviewer_start() {
+	if [ ! -e $OVPATH/overviewer.py ]
 	then
-		echo "$SERVICE is running! Will not start Overviewer."
+		echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
+		exit 1
+	fi
+	if [ ! -e $OUTPUTMAP ]
+	then
+		as_user "mkdir -p $OUTPUTMAP"
+	fi
+	if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
+	then
+		echo "Start generating map with Minecraft-Overviewer"
+		as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+		echo "Map generated"
 	else
-
-		if [ ! -e $OVPATH/overviewer.py ]
-		then
-			echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
-			exit 1
-		fi
-
-		if [ ! -e $WORLDSTORAGE/$1 ]
+		echo "No config file found. Start with default config"
+		if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
 		then
 			echo "World \"$1\" not found."
-			exit 1
-		fi
-		if [ ! -e $OUTPUTMAP ]
-		then
-			as_user "mkdir -p $OUTPUTMAP"
-		fi
-		if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
-		then
-			echo "Start generating map with Minecraft-Overviewer"
-			as_user "python $OVPATH/overviewer.py --settings $OVCONFIGPATH/$OVCONFIGNAME $WORLDSTORAGE/$1 $OUTPUTMAP" > /dev/null
-			echo "Map generated"
 		else
-			echo "No config file found. Start with default config"
 			echo "Start generating map with Minecraft-Overviewer"
-			as_user "python $OVPATH/overviewer.py $WORLDSTORAGE/$1 $OUTPUTMAP" > /dev/null
+			as_user "python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
 			echo "Map generated"
 		fi
-
 	fi
 }
+
+overviewer_copy_worlds() {
+	#
+	# Backup the worlds for overviewer
+	#
+
+	get_worlds
+	for INDEX in ${!WORLDNAME[@]}
+	do
+		echo "Copying minecraft ${WORLDNAME[$INDEX]}"
+		as_user "mkdir -p $OVBACKUP"
+		as_user "rsync -rt --delete $WORLDSTORAGE/${WORLDNAME[$INDEX]} $OVBACKUP/${WORLDNAME[$INDEX]}"
+	done
+}
+
 
 
 case "$1" in
@@ -573,15 +580,15 @@ case "$1" in
 		;;
 	overviewer)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
-			mc_stop
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say MAP OVERVIEW GENERATING!\"\015'"
+			mc_saveoff
 			to_disk
-			start_overviewer $2
-			check_links
-			to_ram
-			mc_start
+			overviewer_copy_worlds
+			mc_saveon
+			overviewer_start $2
 		else
-			start_overviewer $2
+			overviewer_copy_worlds
+			overviewer_start $2
 		fi
 		;;
 	help)
@@ -605,7 +612,7 @@ case "$1" in
 		echo "last - shows recently connected users"
 		echo "worlds - shows a list of available worlds"
 		echo "ramdisk WORLD - toggles ramdisk configuration for WORLD"
-		echo "overviewer WORLD - create a map of the WORLD with Minecraft-Overviewer"
+		echo "overviewer [WORLD] - create a map of the WORLD with Minecraft-Overviewer"
 		echo "whitelist-add NAME - adds the specified player to the server whitelist"
 		echo "whitelist-reload - reloads the whitelist"
 		;;
