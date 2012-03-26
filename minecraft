@@ -191,6 +191,7 @@ get_worlds() {
 	done
 }
 mc_whole_backup() {
+	echo "backing up entire setup into $WHOLEBACKUP"
 	as_user "mkdir -p $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
 	as_user "cp -rP $MCPATH $path"
