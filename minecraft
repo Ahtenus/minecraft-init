@@ -358,31 +358,46 @@ change_ramdisk_state() {
 	echo "changes will only take effect after server is restarted."	
 }
 overviewer_start() {
-	if [ ! -e $OVPATH/overviewer.py ]
-	then
-		echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
-		exit 1
-	fi
-	if [ ! -e $OUTPUTMAP ]
-	then
-		as_user "mkdir -p $OUTPUTMAP"
-	fi
-	if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
-	then
-		echo "Start generating map with Minecraft-Overviewer"
-		as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
-		echo "Map generated"
-	else
-		echo "No config file found. Start with default config"
-		if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
-		then
-			echo "World \"$1\" not found."
-		else
-			echo "Start generating map with Minecraft-Overviewer"
-			as_user "python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
-			echo "Map generated"
-		fi
-	fi
+        if [ ! -e $OVPATH/overviewer.py ]
+        then
+                if [ ! "$OVPATH" == "apt" ]
+                then
+                        echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
+                        exit 1
+                else
+                        echo "Using APT repository installed Minecraft-Overviewer"
+                fi
+        fi
+        if [ ! -e $OUTPUTMAP ]
+        then
+                as_user "mkdir -p $OUTPUTMAP"
+        fi
+        if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
+        then
+                echo "Start generating map with Minecraft-Overviewer"
+                if [ "$OVPATH" == "apt" ]
+                then
+                        as_user "overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+                else
+                        as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+                fi
+                echo "Map generated"
+        else
+                echo "No config file found. Start with default config"
+                if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
+                then
+                        echo "World \"$1\" not found."
+                else
+                        echo "Start generating map with Minecraft-Overviewer"
+                        if [ "$OVPATH" == "apt" ]
+                        then
+                                as_user "overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
+                        else
+                                as_user "python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
+                        fi
+                        echo "Map generated"
+                fi
+        fi
 }
 
 overviewer_copy_worlds() {
