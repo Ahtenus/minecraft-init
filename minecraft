@@ -206,16 +206,17 @@ mc_world_backup() {
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
-		as_user "mkdir -p $BACKUPPATH/${today}"
-		
 		case "$BACKUPFORMAT" in
 			tar)
 				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
-					# If isset tars will be put in $BACKUPPATH without any timestamp to be compatible with
-					# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
+				# If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
+				# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
 				then
+					echo "Deleting old backup of ${WORLDNAME[$INDEX]}"
+					as_user "rm -r $BACKUPPATH/${WORLDNAME[$INDEX]}.zip"
 					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.tar.bz2
 				else
+					as_user "mkdir -p $BACKUPPATH/${today}"
 					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
 				fi
 				as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
@@ -223,8 +224,11 @@ mc_world_backup() {
 			zip)
 				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
 				then
+					echo "Deleting old backup of ${WORLDNAME[$INDEX]}"
+					as_user "rm -r $BACKUPPATH/${WORLDNAME[$INDEX]}.zip"
 					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.zip
 				else
+					as_user "mkdir -p $BACKUPPATH/${today}"
 					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
 				fi
 				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
