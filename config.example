@@ -74,7 +74,7 @@ WORLDSTORAGE="${MCPATH}/worldstorage"
 # Where the Map is generated
 OUTPUTMAP="/home/${USERNAME}/mcmap"
 
-# Path to Minecraft-Overviewer
+# Path to Minecraft-Overviewer. If using an APT repository installed version, set to: "apt".
 OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
 
 # Path for the config file of Overviewer
