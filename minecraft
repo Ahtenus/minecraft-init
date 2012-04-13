@@ -203,6 +203,7 @@ mc_world_backup() {
 
 	get_worlds
 	today="`date +%F`"
+	as_user "mkdir -p $BACKUPPATH"
 	# Check if the backupt script compatibility is enabled
 		if [ "$BACKUPSCRIPTCOMPATIBLE" ]
 		then
