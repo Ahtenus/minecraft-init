@@ -203,6 +203,10 @@ mc_world_backup() {
 
 	get_worlds
 	today="`date +%F`"
+		if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+		then
+			as_user "rm -r $BACKUPPATH/*"
+		fi
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
