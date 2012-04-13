@@ -203,8 +203,10 @@ mc_world_backup() {
 
 	get_worlds
 	today="`date +%F`"
+	# Check if the backupt script compatibility is enabled
 		if [ "$BACKUPSCRIPTCOMPATIBLE" ]
 		then
+			echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
 			as_user "rm -r $BACKUPPATH/*"
 		fi
 	for INDEX in ${!WORLDNAME[@]}
@@ -216,8 +218,6 @@ mc_world_backup() {
 				# If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
 				# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
 				then
-					echo "Deleting old backup of ${WORLDNAME[$INDEX]}"
-					as_user "rm -r $BACKUPPATH/${WORLDNAME[$INDEX]}.zip"
 					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.tar.bz2
 				else
 					as_user "mkdir -p $BACKUPPATH/${today}"
@@ -228,8 +228,6 @@ mc_world_backup() {
 			zip)
 				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
 				then
-					echo "Deleting old backup of ${WORLDNAME[$INDEX]}"
-					as_user "rm -r $BACKUPPATH/${WORLDNAME[$INDEX]}.zip"
 					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.zip
 				else
 					as_user "mkdir -p $BACKUPPATH/${today}"
