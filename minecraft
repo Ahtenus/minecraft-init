@@ -617,7 +617,7 @@ case "$1" in
 	help)
 		echo "Usage: $0 command"
 		echo 
-		echo "The commands are the fallowing:"
+		echo "The commands available are the fallowing:"
 		echo -e "   start \t\t Starts the server"
 		echo -e "   stop \t\t Stops the server"
 		echo -e "   restart \t\t Restarts the server"
