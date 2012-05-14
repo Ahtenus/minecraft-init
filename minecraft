@@ -614,7 +614,7 @@ case "$1" in
 			overviewer_start $2
 		fi
 		;;
-	help)
+	help|--help|-h)
 		echo "Usage: $0 command"
 		echo 
 		echo "The commands available are the fallowing:"
@@ -641,7 +641,7 @@ case "$1" in
 		echo -e "   whitelist-reload \t Reloads the whitelist"
 		;;
 	*)
-		echo "No such command see $0 help"
+		echo "No such command, see $0 help"
 		exit 1
 		;;
 esac
