@@ -614,33 +614,34 @@ case "$1" in
 			overviewer_start $2
 		fi
 		;;
-	help)
+	help|--help|-h)
 		echo "Usage: $0 command"
 		echo 
-		echo "start - Starts the server"
-		echo "stop - stops the server"
-		echo "restart - restarts the server"
-		echo "backup - backups the worlds defined in the script"
-		echo "whole-backup - backups the entire server folder"
-		echo "update - fetches the latest version of minecraft.jar server and Bukkit"
-		echo "log-roll - Moves and gzips the logfile"
-		echo "to-disk - copies the worlds from the ramdisk to worldstorage"
-		echo "save-off - flushes the world to disk and then disables saving until save-on is called"
-		echo "save-on - re-enables saving if it was previously disabled by save-off"
-		echo "say - Prints the given string to the ingame chat."
-		echo "connected - lists connected users"
-		echo "status - Shows server status"
-		echo "version - returs Bukkit version"
-		echo "links - creates nessesary symlinks"
-		echo "last - shows recently connected users"
-		echo "worlds - shows a list of available worlds"
-		echo "ramdisk WORLD - toggles ramdisk configuration for WORLD"
-		echo "overviewer [WORLD] - create a map of the WORLD with Minecraft-Overviewer"
-		echo "whitelist-add NAME - adds the specified player to the server whitelist"
-		echo "whitelist-reload - reloads the whitelist"
+		echo "The commands available are the fallowing:"
+		echo -e "   start \t\t Starts the server"
+		echo -e "   stop \t\t Stops the server"
+		echo -e "   restart \t\t Restarts the server"
+		echo -e "   backup \t\t Backups the worlds defined in the script"
+		echo -e "   whole-backup \t Backups the entire server folder"
+		echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit"
+		echo -e "   log-roll \t\t Moves and gzips the logfile"
+		echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage"
+		echo -e "   save-off \t\t Flushes the world to disk and then disables saving"
+		echo -e "   save-on \t\t Re-enables saving if it was previously disabled by save-off"
+		echo -e "   say \t\t\t Prints the given string to the ingame chat."
+		echo -e "   connected \t\t Lists connected users"
+		echo -e "   status \t\t Displays server status"
+		echo -e "   version \t\t Displays Bukkit version and then exits"
+		echo -e "   links \t\t Creates nessesary symlinks"
+		echo -e "   last \t\t Displays recently connected users"
+		echo -e "   worlds \t\t Displays a list of available worlds"
+		echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD"
+		echo -e "   overviewer [WORLD] \t Creates a map of the WORLD with Minecraft-Overviewer"
+		echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist"
+		echo -e "   whitelist-reload \t Reloads the whitelist"
 		;;
 	*)
-		echo "No such command see $0 help"
+		echo "No such command, see $0 help"
 		exit 1
 		;;
 esac
