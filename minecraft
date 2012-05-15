@@ -78,7 +78,7 @@ mc_start() {
 	seconds=0
 	until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	do
-		sleep 1 
+		sleep 1
 		seconds=$seconds+1
 		if [[ $seconds -eq 5 ]]
 		then
