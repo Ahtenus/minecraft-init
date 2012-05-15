@@ -238,7 +238,7 @@ mc_world_backup() {
 				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			*)
-				echo "$BACKUPFORMAT is no supported backup format"
+				echo "$BACKUPFORMAT is not a supported backup format"
 				;;
 		esac
 	done
@@ -256,18 +256,18 @@ check_links() {
 				then
 					as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
 					as_user "ln -s $RAMDISK/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
-					echo "created link for ${WORLDNAME[$INDEX]}"
+					echo "Created link for ${WORLDNAME[$INDEX]}"
 				fi
 			else
 				if [ "$link" != "${WORLDSTORAGE}/${WORLDNAME[$INDEX]}" ]
 				then
 					as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
 					as_user "ln -s ${WORLDSTORAGE}/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
-					echo "created link for ${WORLDNAME[$INDEX]}"
+					echo "Created link for ${WORLDNAME[$INDEX]}"
 				fi
 			fi
 		else
-			echo "could not process ${WORLDNAME[$INDEX]}. please move all worlds to ${WORLDSTORAGE}."
+			echo "Could not process ${WORLDNAME[$INDEX]}. please move all worlds to ${WORLDSTORAGE}."
 			exit 1
 		fi
 	done
@@ -382,28 +382,28 @@ overviewer_start() {
         fi
         if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
         then
-                echo "Start generating map with Minecraft-Overviewer"
+                echo "Start generating map with Minecraft-Overviewer..."
                 if [ "$OVPATH" == "apt" ]
                 then
                         as_user "overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
                 else
                         as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
                 fi
-                echo "Map generated"
+                echo "Map generated."
         else
-                echo "No config file found. Start with default config"
+                echo "No config file found. Start with default config..."
                 if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
                 then
                         echo "World \"$1\" not found."
                 else
-                        echo "Start generating map with Minecraft-Overviewer"
+                        echo "Start generating map with Minecraft-Overviewer..."
                         if [ "$OVPATH" == "apt" ]
                         then
                                 as_user "nice overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
                         else
                                 as_user "nice python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
                         fi
-                        echo "Map generated"
+                        echo "Map generated."
                 fi
         fi
 }
@@ -416,7 +416,7 @@ overviewer_copy_worlds() {
 	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
-		echo "Copying minecraft ${WORLDNAME[$INDEX]}"
+		echo "Copying minecraft ${WORLDNAME[$INDEX]}."
 		as_user "mkdir -p $OVBACKUP"
 		as_user "rsync -rt --delete $WORLDSTORAGE/${WORLDNAME[$INDEX]} $OVBACKUP/${WORLDNAME[$INDEX]}"
 	done
@@ -442,13 +442,13 @@ case "$1" in
 			mc_stop
 			to_disk
 		else
-			echo "No running server"
+			echo "No running server."
 		fi
 		;;
 	restart)
 		# Restarts the server
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS!\"\015'"
 			mc_stop
 			to_disk
 		else
@@ -463,7 +463,7 @@ case "$1" in
 		if is_running; then
 			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
 		else
-			echo "No running server"
+			echo "No running server."
 		fi
 		;;
 	whitelist-add)
@@ -471,7 +471,7 @@ case "$1" in
 		if is_running; then
 			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
 		else
-			echo "No running server"
+			echo "No running server."
 		fi
 		;;
 	backup)
