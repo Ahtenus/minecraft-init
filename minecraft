@@ -207,6 +207,7 @@ mc_world_backup() {
 	# Check if the backupt script compatibility is enabled
 		if [ "$BACKUPSCRIPTCOMPATIBLE" ]
 		then
+			# If it is enabled, then delete the old backups to prevent errors
 			echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
 			as_user "rm -r $BACKUPPATH/*"
 		fi
@@ -301,7 +302,7 @@ mc_update() {
 	then
 		echo "$SERVICE is running! Will not start update."
 	else
-		### update minecraft_server.jar
+		# Update minecraft_server.jar
 		echo "Updating minecraft_server.jar...."
 		MC_SERVER_URL=`wget -q -O - http://www.minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
 		as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
@@ -319,7 +320,7 @@ mc_update() {
 			echo "Minecraft update could not be downloaded."
 		fi
 
-		### update craftbukkit
+		# Update craftbukkit.jar
 		echo "Updating craftbukkit...."
 		case $CB_RELEASE in
 			unstable|UNSTABLE|Unstable|dev|development)
