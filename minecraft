@@ -477,7 +477,7 @@ case "$1" in
 	backup)
 		# Backups world
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world, brace for lag.\"\015'"
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
 			mc_saveoff
 			to_disk
 			mc_world_backup
@@ -605,7 +605,7 @@ case "$1" in
 		;;
 	overviewer)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say MAP OVERVIEW GENERATING, PREPARE FOR LAG!\"\015'"
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Generating overviewer map.\"\015'"
 			mc_saveoff
 			to_disk
 			overviewer_copy_worlds
