@@ -93,12 +93,31 @@ mc_start() {
 	echo "$SERVICE is running."
 }
 
+mc_command() {
+        if is_running
+        then
+                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$1\"\015'"
+        else
+                echo "$SERVICE was not running. Not able to tun command."
+        fi
+}
+
+if [ $CONSOLELIKECOMMAND -eq true ]; then
+	mc_command() {
+		if is_running
+	then
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"/$1\"\015'"
+	else
+		echo "$SERVICE was not running. Not able to run command."
+	fi
+}
+
 mc_saveoff() {
 	if is_running
 	then
 		echo "$SERVICE is running... suspending saves"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-off\"\015'"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+		mc_command save-off
+		mc_command save-all
 		sync
 		sleep 10
 	else
@@ -110,7 +129,7 @@ mc_saveon() {
 	if is_running
 	then
 		echo "$SERVICE is running... re-enabling saves"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-on\"\015'"
+		mc_command save-on
 	else
 		echo "$SERVICE was not running. Not resuming saves."
 	fi
@@ -120,7 +139,7 @@ mc_say() {
 	if is_running
 	then
 		echo "Said: $1"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say $1\"\015'"
+		mc_command "say $1"
 	else
 		echo "$SERVICE was not running. Not able to say anything."
 	fi
@@ -131,10 +150,10 @@ mc_stop() {
 	# Stops the server
 	#
 	echo "Saving worlds..."
-	as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+	mc_command save-all
 	sleep 10
 	echo "Stopping server..."
-	as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
+	mc_command stop
 	sleep 0.5
 	#
 	# Waiting for the server to shut down
@@ -438,7 +457,7 @@ case "$1" in
 	stop)
 		# Stops the server
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+			mc_say "SERVER SHUTTING DOWN!"
 			mc_stop
 			to_disk
 		else
@@ -448,7 +467,7 @@ case "$1" in
 	restart)
 		# Restarts the server
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS!\"\015'"
+			mc_say "SERVER REBOOT IN 10 SECONDS!"
 			mc_stop
 			to_disk
 		else
@@ -461,7 +480,7 @@ case "$1" in
 	whitelist-reload)
 		# Reloads the whitelist
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
+			mc_command "whitelist reload"
 		else
 			echo "No running server."
 		fi
@@ -469,7 +488,7 @@ case "$1" in
 	whitelist-add)
 		# Adds a player to the whitelist
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
+			mc_command "whitelist add $2"
 		else
 			echo "No running server."
 		fi
@@ -477,12 +496,12 @@ case "$1" in
 	backup)
 		# Backups world
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
+			mc_say "Backing up world."
 			mc_saveoff
 			to_disk
 			mc_world_backup
 			mc_saveon
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
+			mc_say "Backup complete."
 		else
 			mc_world_backup
 		fi
@@ -490,8 +509,8 @@ case "$1" in
 	whole-backup)
                 # Backup everything
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say COMPLETE SERVER BACKUP IN 10 SECONDS.\"\015'"
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say WARNING: WILL RESTART SERVER SOFTWARE!\"\015'"
+			mc_say "COMPLETE SERVER BACKUP IN 10 SECONDS.";
+			mc_say "WARNING: WILL RESTART SERVER SOFTWARE!"
 			mc_stop
 			to_disk
 			mc_whole_backup
@@ -504,7 +523,7 @@ case "$1" in
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
+			mc_say "SERVER UPDATE IN 10 SECONDS."
 			mc_stop
 			to_disk
 			mc_whole_backup
@@ -552,7 +571,7 @@ case "$1" in
 	connected)
 		# Lists connected users
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
+			mc_command list
 			sleep 3s
 			tac $MCPATH/server.log | grep -m 1 "Connected"
 		else
@@ -579,7 +598,7 @@ case "$1" in
 		;;
 	version)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+			mc_command version
 			tac $MCPATH/server.log | grep -m 1 "This server is running"
 		else
 			echo "The server needs to be running to check version."
@@ -605,7 +624,7 @@ case "$1" in
 		;;
 	overviewer)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Generating overviewer map.\"\015'"
+			mc_say "Generating overviewer map."
 			mc_saveoff
 			to_disk
 			overviewer_copy_worlds

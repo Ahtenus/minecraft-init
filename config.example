@@ -45,6 +45,9 @@ BACKUPPATH="/home/${USERNAME}/mcbackup/worlds"
 # Format for world backup (tar or zip).
 BACKUPFORMAT="tar"  
 
+# Whether to output commands for the plugin ConsoleLikeChat
+CONSOLELIKECHAT=false
+
 # Normally backups will be put in a subfolder to $BACKUPPATH with todays date
 # and the backups themselves will have a timestamp.
 
