@@ -96,20 +96,10 @@ mc_start() {
 mc_command() {
         if is_running
         then
-                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$1\"\015'"
+                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
         else
                 echo "$SERVICE was not running. Not able to tun command."
         fi
-}
-
-if [ $CONSOLELIKECOMMAND -eq true ]; then
-	mc_command() {
-		if is_running
-	then
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"/$1\"\015'"
-	else
-		echo "$SERVICE was not running. Not able to run command."
-	fi
 }
 
 mc_saveoff() {
