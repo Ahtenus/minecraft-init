@@ -276,7 +276,7 @@ check_links() {
 				fi
 			fi
 		else
-		    echo "Could not process the world named '${WORLDNAME[$INDEX]}'. please move all worlds to ${WORLDSTORAGE}."
+		    echo "Could not process the world named '${WORLDNAME[$INDEX]}'. Please move all worlds to ${WORLDSTORAGE}."
 
 		    exit 1
 		fi
@@ -331,7 +331,7 @@ mc_update() {
 		fi
 
 		# Update craftbukkit.jar
-		echo "Updating craftbukkit...."
+		echo "Updating craftbukkit..."
 		case $CB_RELEASE in
 			unstable|UNSTABLE|Unstable|dev|development)
 				CB_URL="http://dl.bukkit.org"
@@ -368,12 +368,12 @@ change_ramdisk_state() {
 	if [ -e $WORLDSTORAGE/$1/ramdisk ]
 	then
 		rm $WORLDSTORAGE/$1/ramdisk
-		echo "removed ramdisk flag from \"$1\""
+		echo "Removed ramdisk flag from \"$1\""
 	else
 		touch $WORLDSTORAGE/$1/ramdisk
-		echo "added ramdisk flag to \"$1\""
+		echo "Added ramdisk flag to \"$1\""
 	fi
-	echo "changes will only take effect after server is restarted."	
+	echo "Changes will only take effect after server is restarted."	
 }
 overviewer_start() {
         if [ ! -e $OVPATH/overviewer.py ]
