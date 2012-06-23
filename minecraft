@@ -78,7 +78,7 @@ mc_start() {
 	seconds=0
 	until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
 	do
-		sleep 1 
+		sleep 1
 		seconds=$seconds+1
 		if [[ $seconds -eq 5 ]]
 		then
@@ -93,12 +93,21 @@ mc_start() {
 	echo "$SERVICE is running."
 }
 
+mc_command() {
+        if is_running
+        then
+                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
+        else
+                echo "$SERVICE was not running. Not able to tun command."
+        fi
+}
+
 mc_saveoff() {
 	if is_running
 	then
 		echo "$SERVICE is running... suspending saves"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-off\"\015'"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+		mc_command save-off
+		mc_command save-all
 		sync
 		sleep 10
 	else
@@ -110,7 +119,7 @@ mc_saveon() {
 	if is_running
 	then
 		echo "$SERVICE is running... re-enabling saves"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-on\"\015'"
+		mc_command save-on
 	else
 		echo "$SERVICE was not running. Not resuming saves."
 	fi
@@ -120,7 +129,7 @@ mc_say() {
 	if is_running
 	then
 		echo "Said: $1"
-		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say $1\"\015'"
+		mc_command "say $1"
 	else
 		echo "$SERVICE was not running. Not able to say anything."
 	fi
@@ -131,10 +140,10 @@ mc_stop() {
 	# Stops the server
 	#
 	echo "Saving worlds..."
-	as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+	mc_command save-all
 	sleep 10
 	echo "Stopping server..."
-	as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
+	mc_command stop
 	sleep 0.5
 	#
 	# Waiting for the server to shut down
@@ -207,6 +216,7 @@ mc_world_backup() {
 	# Check if the backupt script compatibility is enabled
 		if [ "$BACKUPSCRIPTCOMPATIBLE" ]
 		then
+			# If it is enabled, then delete the old backups to prevent errors
 			echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
 			as_user "rm -r $BACKUPPATH/*"
 		fi
@@ -237,7 +247,7 @@ mc_world_backup() {
 				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
 				;;
 			*)
-				echo "$BACKUPFORMAT is no supported backup format"
+				echo "$BACKUPFORMAT is not a supported backup format"
 				;;
 		esac
 	done
@@ -255,19 +265,20 @@ check_links() {
 				then
 					as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
 					as_user "ln -s $RAMDISK/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
-					echo "created link for ${WORLDNAME[$INDEX]}"
+					echo "Created link for ${WORLDNAME[$INDEX]}"
 				fi
 			else
 				if [ "$link" != "${WORLDSTORAGE}/${WORLDNAME[$INDEX]}" ]
 				then
 					as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
 					as_user "ln -s ${WORLDSTORAGE}/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
-					echo "created link for ${WORLDNAME[$INDEX]}"
+					echo "Created link for ${WORLDNAME[$INDEX]}"
 				fi
 			fi
 		else
-			echo "Could not process the world named '${WORLDNAME[$INDEX]}'. please move all worlds to ${WORLDSTORAGE}."
-			exit 1
+		    echo "Could not process the world named '${WORLDNAME[$INDEX]}'. please move all worlds to ${WORLDSTORAGE}."
+
+		    exit 1
 		fi
 	done
 }
@@ -301,7 +312,7 @@ mc_update() {
 	then
 		echo "$SERVICE is running! Will not start update."
 	else
-		### update minecraft_server.jar
+		# Update minecraft_server.jar
 		echo "Updating minecraft_server.jar...."
 		MC_SERVER_URL=`wget -q -O - http://www.minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
 		as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
@@ -319,7 +330,7 @@ mc_update() {
 			echo "Minecraft update could not be downloaded."
 		fi
 
-		### update craftbukkit
+		# Update craftbukkit.jar
 		echo "Updating craftbukkit...."
 		case $CB_RELEASE in
 			unstable|UNSTABLE|Unstable|dev|development)
@@ -381,28 +392,28 @@ overviewer_start() {
         fi
         if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
         then
-                echo "Start generating map with Minecraft-Overviewer"
+                echo "Start generating map with Minecraft-Overviewer..."
                 if [ "$OVPATH" == "apt" ]
                 then
                         as_user "overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
                 else
                         as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
                 fi
-                echo "Map generated"
+                echo "Map generated."
         else
-                echo "No config file found. Start with default config"
+                echo "No config file found. Start with default config..."
                 if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
                 then
                         echo "World \"$1\" not found."
                 else
-                        echo "Start generating map with Minecraft-Overviewer"
+                        echo "Start generating map with Minecraft-Overviewer..."
                         if [ "$OVPATH" == "apt" ]
                         then
                                 as_user "nice overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
                         else
                                 as_user "nice python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
                         fi
-                        echo "Map generated"
+                        echo "Map generated."
                 fi
         fi
 }
@@ -415,7 +426,7 @@ overviewer_copy_worlds() {
 	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
 	do
-		echo "Copying minecraft ${WORLDNAME[$INDEX]}"
+		echo "Copying minecraft ${WORLDNAME[$INDEX]}."
 		as_user "mkdir -p $OVBACKUP"
 		as_user "rsync -rt --delete $WORLDSTORAGE/${WORLDNAME[$INDEX]} $OVBACKUP/${WORLDNAME[$INDEX]}"
 	done
@@ -437,17 +448,17 @@ case "$1" in
 	stop)
 		# Stops the server
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+			mc_say "SERVER SHUTTING DOWN!"
 			mc_stop
 			to_disk
 		else
-			echo "No running server"
+			echo "No running server."
 		fi
 		;;
 	restart)
 		# Restarts the server
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
+			mc_say "SERVER REBOOT IN 10 SECONDS!"
 			mc_stop
 			to_disk
 		else
@@ -460,28 +471,28 @@ case "$1" in
 	whitelist-reload)
 		# Reloads the whitelist
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
+			mc_command "whitelist reload"
 		else
-			echo "No running server"
+			echo "No running server."
 		fi
 		;;
 	whitelist-add)
 		# Adds a player to the whitelist
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
+			mc_command "whitelist add $2"
 		else
-			echo "No running server"
+			echo "No running server."
 		fi
 		;;
 	backup)
 		# Backups world
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
+			mc_say "Backing up world."
 			mc_saveoff
 			to_disk
 			mc_world_backup
 			mc_saveon
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
+			mc_say "Backup complete."
 		else
 			mc_world_backup
 		fi
@@ -489,7 +500,8 @@ case "$1" in
 	whole-backup)
                 # Backup everything
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
+			mc_say "COMPLETE SERVER BACKUP IN 10 SECONDS.";
+			mc_say "WARNING: WILL RESTART SERVER SOFTWARE!"
 			mc_stop
 			to_disk
 			mc_whole_backup
@@ -502,7 +514,7 @@ case "$1" in
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
+			mc_say "SERVER UPDATE IN 10 SECONDS."
 			mc_stop
 			to_disk
 			mc_whole_backup
@@ -550,7 +562,7 @@ case "$1" in
 	connected)
 		# Lists connected users
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
+			mc_command list
 			sleep 3s
 			tac $MCPATH/server.log | grep -m 1 "Connected"
 		else
@@ -577,7 +589,7 @@ case "$1" in
 		;;
 	version)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+			mc_command version
 			tac $MCPATH/server.log | grep -m 1 "This server is running"
 		else
 			echo "The server needs to be running to check version."
@@ -603,7 +615,7 @@ case "$1" in
 		;;
 	overviewer)
 		if is_running; then
-			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say MAP OVERVIEW GENERATING!\"\015'"
+			mc_say "Generating overviewer map."
 			mc_saveoff
 			to_disk
 			overviewer_copy_worlds
