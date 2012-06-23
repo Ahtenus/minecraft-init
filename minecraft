@@ -266,7 +266,7 @@ check_links() {
 				fi
 			fi
 		else
-			echo "could not process ${WORLDNAME[$INDEX]}. please move all worlds to ${WORLDSTORAGE}."
+			echo "Could not process the world named '${WORLDNAME[$INDEX]}'. please move all worlds to ${WORLDSTORAGE}."
 			exit 1
 		fi
 	done
@@ -615,7 +615,7 @@ case "$1" in
 		fi
 		;;
 	help|--help|-h)
-		echo "Usage: $0 command"
+		echo "Usage: $0 COMMAND"
 		echo 
 		echo "Available commands:"
 		echo -e "   start \t\t Starts the server"
@@ -636,7 +636,7 @@ case "$1" in
 		echo -e "   last \t\t Displays recently connected users"
 		echo -e "   worlds \t\t Displays a list of available worlds"
 		echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD"
-		echo -e "   overviewer [WORLD] \t Creates a map of the WORLD with Minecraft-Overviewer"
+		echo -e "   overviewer WORLD \t Creates a map of the WORLD with Minecraft-Overviewer"
 		echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist"
 		echo -e "   whitelist-reload \t Reloads the whitelist"
 		;;
