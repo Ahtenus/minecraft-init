@@ -98,7 +98,7 @@ mc_command() {
         then
                 as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
         else
-                echo "$SERVICE was not running. Not able to tun command."
+                echo "$SERVICE was not running. Not able to run command."
         fi
 }
 
@@ -332,14 +332,16 @@ mc_update() {
 
 		# Update craftbukkit.jar
 		echo "Updating craftbukkit..."
+        CB_URL="http://dl.bukkit.org/latest-"
 		case $CB_RELEASE in
 			unstable|UNSTABLE|Unstable|dev|development)
-				CB_URL="http://dl.bukkit.org"
-				CB_DEV_URL="http://dl.bukkit.org/downloads/craftbukkit/list/dev/"
-				CB_SERVER_URL=$CB_URL`wget -q -O - $CB_DEV_URL | grep -m 1 .jar | cut -d \" -f 2`
+				CB_SERVER_URL=$CB_URL"dev/craftbukkit.jar"
 				;;
+            beta|Beta|BETA)
+                CB_SERVER_URL=$CB_URL"beta/craftbukkit.jar"
+                ;;
 			*)
-				CB_SERVER_URL="http://cbukk.it/craftbukkit.jar"
+				CB_SERVER_URL=$CB_URL"rb/craftbukkit.jar"
 				;;
 		esac
 		as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
