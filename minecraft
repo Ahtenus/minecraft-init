@@ -203,7 +203,13 @@ mc_whole_backup() {
 	echo "backing up entire setup into $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
 	as_user "mkdir -p $path"
-	as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+	
+	if [ "$COMPRESS_WHOLEBACKUP" ]
+	then
+		as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
+	else
+		as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+	fi
 }
 mc_world_backup() {
 	#
