@@ -193,6 +193,7 @@ get_worlds() {
 			then
 				WORLDRAM[$a]=true
 			else
+				WORLDRAM[$a]=false
 			fi
 			a=$a+1
 		fi
