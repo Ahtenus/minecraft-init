@@ -10,6 +10,7 @@ Features
  * Cleaning of server.log, a big log file slows down the server
  * Backup for worlds
  * Server updating and complete backup
+ * Exclude files and directories from full backup by adding them to "exclude.list"
 
 Requirements
 ------------
