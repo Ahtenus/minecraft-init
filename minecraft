@@ -325,11 +325,9 @@ check_update_vanilla() {
 		if `diff $MCPATH/$MC_JAR $MCPATH/minecraft_server.jar.update >/dev/null`
 		then
 			echo "You are already running the latest version of minecraft_server.jar."
-			as_user "rm $MCPATH/minecraft_server.jar.update"
 			return 0
 		else
 			echo "Update of $MC_JAR is needed."
-			as_user "rm $MCPATH/minecraft_server.jar.update"
 			return 1
 		fi
 	else
@@ -364,11 +362,9 @@ check_update_craftbukkit() {
 		if `diff $MCPATH/$CB_JAR $MCPATH/craftbukkit.jar.update >/dev/null`
 		then
 			echo "You are already running the latest version of craftbukkit.jar."
-			as_user "rm $MCPATH/craftbukkit.jar.update"
 			return 0
 		else
 			echo "Update of $CB_JAR is needed."
-			as_user "rm $MCPATH/craftbukkit.jar.update"
 			return 1
 		fi
 	else
@@ -383,20 +379,30 @@ mc_update() {
 	else
 		if check_update_vanilla
 		then
-			MC_SERVER_URL=`wget -q -O - http://minecraft.net/download | grep minecraft_server.jar\ | cut -d \" -f 6`
-
-			as_user "cd $MCPATH && wget -q -O $MCPATH/$MC_JAR $MC_SERVER_URL"
-			echo "Thats it. Update of $MC_JAR done."
+			if [ -r "$MCPATH/minecraft_server.jar.update" ]
+			then
+				as_user "mv $MCPATH/minecraft_server.jar.update $MCPATH/$MC_JAR"
+				echo "Thats it. Update of $MC_JAR done."
+			else
+				echo "Something went wrong. Couldn't replace your original $MC_JAR with minecraft_server.jar.update"
+			fi
 		else
 			echo "Not updating $MB_JAR. It's not necessary"
+			as_user "rm $MCPATH/minecraft_server.jar.update"
 		fi
 
 		if check_update_craftbukkit
 		then
-			as_user "cd $MCPATH && wget -q -O $MCPATH/$CB_JAR $(get_cb_release_channel)"
-			echo "Thats it. Update of $CB_JAR done."
+			if [ -r "$MCPATH/craftbukkit.jar.update" ]
+			then
+				as_user "mv $MCPATH/craftbukkit.jar.update $MCPATH/$CB_JAR"
+				echo "Thats it. Update of $CB_JAR done."
+			else
+				echo "Something went wrong. Couldn't replace your original $CB_JAR with craftbukkit.jar.update"
+			fi
 		else
 			echo "Not updating $CB_JAR. It's not necessary"
+			as_user "rm $MCPATH/craftbukkit.jar.update"
 		fi
 	fi
 }
@@ -556,6 +562,8 @@ case "$1" in
 	check-update)
 		check_update_vanilla
 		check_update_craftbukkit
+		as_user "rm $MCPATH/minecraft_server.jar.update"
+		as_user "rm $MCPATH/craftbukkit.jar.update"
 		;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
