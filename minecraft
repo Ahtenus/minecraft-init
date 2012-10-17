@@ -440,7 +440,16 @@ overviewer_copy_worlds() {
 	done
 }
 
+whitelist(){
+	mc_command "whitelist list"
+	sleep 1s
+	whitelist=$(tac $MCPATH/server.log | grep -m 1 "White-listed players:")
 
+	echo
+	echo "Currently there are the following players on your whitelist:"
+	echo
+	echo ${whitelist:49} | sed 's/, /\n/g'
+}
 
 case "$1" in
 	start)
@@ -475,6 +484,13 @@ case "$1" in
 		check_links
 		to_ram
 		mc_start
+		;;
+	whitelist)
+		if is_running; then
+			whitelist
+		else
+			echo "Server not running."
+		fi
 		;;
 	whitelist-reload)
 		# Reloads the whitelist
@@ -657,6 +673,7 @@ case "$1" in
 		echo -e "   worlds \t\t Displays a list of available worlds"
 		echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD"
 		echo -e "   overviewer WORLD \t Creates a map of the WORLD with Minecraft-Overviewer"
+		echo -e "   whitelist \t\t Prints the current whitelist"
 		echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist"
 		echo -e "   whitelist-reload \t Reloads the whitelist"
 		;;
