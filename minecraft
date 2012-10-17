@@ -325,10 +325,10 @@ check_update_vanilla() {
 		if `diff $MCPATH/$MC_JAR $MCPATH/minecraft_server.jar.update >/dev/null`
 		then
 			echo "You are already running the latest version of minecraft_server.jar."
-			return 0
+			return 1
 		else
 			echo "Update of $MC_JAR is needed."
-			return 1
+			return 0
 		fi
 	else
 		echo "Something went wrong. Couldn't download minecraft_server.jar"
@@ -362,10 +362,10 @@ check_update_craftbukkit() {
 		if `diff $MCPATH/$CB_JAR $MCPATH/craftbukkit.jar.update >/dev/null`
 		then
 			echo "You are already running the latest version of craftbukkit.jar."
-			return 0
+			return 1
 		else
 			echo "Update of $CB_JAR is needed."
-			return 1
+			return 0
 		fi
 	else
 		echo "Something went wrong. Couldn't download craftbukkit.jar"
