@@ -327,56 +327,96 @@ to_disk() {
 		fi
 	done
 }
+
+check_update_vanilla() {
+	MC_SERVER_URL=`wget -q -O - http://minecraft.net/download | grep minecraft_server.jar\ | cut -d \" -f 6`
+
+	echo "Checking for update for minecraft_server.jar (Vanilla)"
+	as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
+
+	if [ -r "$MCPATH/minecraft_server.jar.update" ]
+	then
+		if `diff $MCPATH/$MC_JAR $MCPATH/minecraft_server.jar.update >/dev/null`
+		then
+			echo "You are already running the latest version of minecraft_server.jar."
+			return 1
+		else
+			echo "Update of $MC_JAR is needed."
+			return 0
+		fi
+	else
+		echo "Something went wrong. Couldn't download minecraft_server.jar"
+	fi
+		
+}
+
+get_cb_release_channel() {
+	CB_URL="http://dl.bukkit.org/latest-"
+
+	case $CB_RELEASE in
+		unstable|UNSTABLE|Unstable|dev|development)
+			echo $CB_URL"dev/craftbukkit.jar"
+		;;
+		beta|Beta|BETA)
+			echo $CB_URL"beta/craftbukkit.jar"
+		;;
+		*)
+			echo $CB_URL"rb/craftbukkit.jar"
+		;;
+	esac
+}
+
+check_update_craftbukkit() {
+	echo "Checking for update for craftbukkit.jar"
+	echo "You are on release channel \"$CB_RELEASE\""
+
+	as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $(get_cb_release_channel)"
+	if [ -r "$MCPATH/craftbukkit.jar.update" ]
+	then
+		if `diff $MCPATH/$CB_JAR $MCPATH/craftbukkit.jar.update >/dev/null`
+		then
+			echo "You are already running the latest version of craftbukkit.jar."
+			return 1
+		else
+			echo "Update of $CB_JAR is needed."
+			return 0
+		fi
+	else
+		echo "Something went wrong. Couldn't download craftbukkit.jar"
+	fi
+}
+
 mc_update() {
 	if is_running
 	then
 		echo "$SERVICE is running! Will not start update."
 	else
-		# Update minecraft_server.jar
-		echo "Updating minecraft_server.jar...."
-		MC_SERVER_URL=`wget -q -O - http://minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
-		as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
-		if [ -f $MCPATH/minecraft_server.jar.update ]
+		if check_update_vanilla
 		then
-			if `diff $MCPATH/$MC_JAR $MCPATH/minecraft_server.jar.update >/dev/null`
+			if [ -r "$MCPATH/minecraft_server.jar.update" ]
 			then
-				echo "You are already running the latest version of the Minecraft server."
-				as_user "rm $MCPATH/minecraft_server.jar.update"
-			else
 				as_user "mv $MCPATH/minecraft_server.jar.update $MCPATH/$MC_JAR"
-				echo "Minecraft successfully updated."
+				echo "Thats it. Update of $MC_JAR done."
+			else
+				echo "Something went wrong. Couldn't replace your original $MC_JAR with minecraft_server.jar.update"
 			fi
 		else
-			echo "Minecraft update could not be downloaded."
+			echo "Not updating $MB_JAR. It's not necessary"
+			as_user "rm $MCPATH/minecraft_server.jar.update"
 		fi
 
-		# Update craftbukkit.jar
-		echo "Updating craftbukkit..."
-        CB_URL="http://dl.bukkit.org/latest-"
-		case $CB_RELEASE in
-			unstable|UNSTABLE|Unstable|dev|development)
-				CB_SERVER_URL=$CB_URL"dev/craftbukkit.jar"
-				;;
-            beta|Beta|BETA)
-                CB_SERVER_URL=$CB_URL"beta/craftbukkit.jar"
-                ;;
-			*)
-				CB_SERVER_URL=$CB_URL"rb/craftbukkit.jar"
-				;;
-		esac
-		as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
-		if [ -f $MCPATH/craftbukkit.jar.update ]
+		if check_update_craftbukkit
 		then
-			if `diff $MCPATH/$CB_JAR $MCPATH/craftbukkit.jar.update > /dev/null`
+			if [ -r "$MCPATH/craftbukkit.jar.update" ]
 			then
-				echo "You are already running the latest version of CraftBukkit."
-				as_user "rm $MCPATH/craftbukkit.jar.update"
-			else
 				as_user "mv $MCPATH/craftbukkit.jar.update $MCPATH/$CB_JAR"
-				echo "CraftBukkit successfully updated."
+				echo "Thats it. Update of $CB_JAR done."
+			else
+				echo "Something went wrong. Couldn't replace your original $CB_JAR with craftbukkit.jar.update"
 			fi
 		else
-			echo "CraftBukkit update could not be downloaded."
+			echo "Not updating $CB_JAR. It's not necessary"
+			as_user "rm $MCPATH/craftbukkit.jar.update"
 		fi
 	fi
 }
@@ -533,6 +573,12 @@ case "$1" in
 			mc_whole_backup
 		fi
 		;;
+	check-update)
+		check_update_vanilla
+		check_update_craftbukkit
+		as_user "rm $MCPATH/minecraft_server.jar.update"
+		as_user "rm $MCPATH/craftbukkit.jar.update"
+		;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
 		if is_running; then
@@ -657,6 +703,7 @@ case "$1" in
 		echo -e "   restart \t\t Restarts the server"
 		echo -e "   backup \t\t Backups the worlds defined in the script"
 		echo -e "   whole-backup \t Backups the entire server folder"
+		echo -e "   check-update \t Checks for updates of $CB_JAR and $MC_JAR"
 		echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit"
 		echo -e "   log-roll \t\t Moves and gzips the logfile"
 		echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage"
