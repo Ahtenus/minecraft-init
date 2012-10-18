@@ -183,6 +183,9 @@ log_roll() {
 
 }
 get_worlds() {
+	SAVEIFS=$IFS
+	$IFS=$(echo -en "\n\b")
+
 	a=1
 	for NAME in $(ls $WORLDSTORAGE)
 	do
@@ -198,6 +201,8 @@ get_worlds() {
 			a=$a+1
 		fi
 	done
+
+	IFS=$SAVEIFS
 }
 mc_whole_backup() {
 	echo "backing up entire setup into $WHOLEBACKUP"
