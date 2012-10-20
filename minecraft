@@ -202,13 +202,27 @@ get_worlds() {
 mc_whole_backup() {
 	echo "backing up entire setup into $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
+	locationOfScript=$(dirname "$(readlink -e "$0")")
 	as_user "mkdir -p $path"
 	
-	if [ "$COMPRESS_WHOLEBACKUP" ]
+	if [ -r "$locationOfScript/exclude.list" ]
 	then
-		as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
+		echo "...except the following files and/or dirs:"
+		cat $locationOfScript/exclude.list
+		
+		if [ "$COMPRESS_WHOLEBACKUP" ]
+		then
+			as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH -X $locationOfScript/exclude.list"
+		else
+			as_user "tar -cpf $path/whole-backup.tar $MCPATH -X $locationOfScript/exclude.list"
+		fi
 	else
-		as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+		if [ "$COMPRESS_WHOLEBACKUP" ]
+		then
+			as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
+		else
+			as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+		fi
 	fi
 }
 mc_world_backup() {
