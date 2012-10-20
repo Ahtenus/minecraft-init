@@ -184,7 +184,7 @@ log_roll() {
 }
 get_worlds() {
 	SAVEIFS=$IFS
-	$IFS=$(echo -en "\n\b")
+	IFS=$(echo -en "\n\b")
 
 	a=1
 	for NAME in $(ls $WORLDSTORAGE)
