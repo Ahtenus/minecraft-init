@@ -48,11 +48,32 @@ as_user() {
 is_running(){
 	# Checks for the minecraft servers screen session
 	# returns true if it exists.
-	if ps ax | grep -v grep | grep "$SCREEN $INVOCATION" > /dev/null
+	pidfile=$(get_script_location)/${SCREEN}.pid
+
+	if [ -r "$pidfile" ]
 	then
-		return 0
+		pid=$(cat $pidfile)
+		if ps ax | grep -v grep | grep ${pid} | grep "${SCREEN} ${INVOCATION}" > /dev/null
+		then
+			return 0
+		else 
+			echo "Rogue pidfile found!"
+			return 1
+		fi
+	else
+		if ps ax | grep -v grep | grep "$SCREEN $INVOCATION" > /dev/null
+		then
+			echo "No pidfile found, but server's running."
+			echo "Re-creating the pidfile."
+			
+			pid=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
+			echo $pid > $pidfile
+
+			return 0
+		else
+			return 1
+		fi
 	fi
-	return 1
 }
 datepath() {
 	# datepath path filending-to-check returned-filending
@@ -70,13 +91,16 @@ datepath() {
 	fi
 }
 mc_start() {
-	cd $MCPATH
+	pidfile=$(get_script_location)/${SCREEN}.pid
+
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
+	as_user "echo $(screen -list | grep $SCREEN | cut -f1 -d'.' | sed 's/\W//g') > $pidfile"
+
 	#
 	# Waiting for the server to start
 	#
 	seconds=0
-	until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	until is_running 
 	do
 		sleep 1
 		seconds=$seconds+1
@@ -136,6 +160,7 @@ mc_say() {
 }
 
 mc_stop() {
+	pidfile=$(get_script_location)/${SCREEN}.pid
 	#
 	# Stops the server
 	#
@@ -149,7 +174,7 @@ mc_stop() {
 	# Waiting for the server to shut down
 	#
 	seconds=0
-	while ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	while is_running
 	do
 		sleep 1 
 		seconds=$seconds+1
@@ -163,7 +188,8 @@ mc_stop() {
 			echo "Failed to shut down, aborting."
 			exit 1
 		fi
-	done	
+	done
+	as_user "rm $pidfile"
 	echo "$SERVICE is now shut down."
 }
 log_roll() {
@@ -438,6 +464,10 @@ overviewer_copy_worlds() {
 		as_user "mkdir -p $OVBACKUP"
 		as_user "rsync -rt --delete $WORLDSTORAGE/${WORLDNAME[$INDEX]} $OVBACKUP/${WORLDNAME[$INDEX]}"
 	done
+}
+
+get_script_location() {
+	echo $(dirname "$(readlink -e "$0")")
 }
 
 
