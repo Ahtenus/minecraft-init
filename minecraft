@@ -525,22 +525,19 @@ overviewer_copy_worlds() {
 	done
 }
 
-<<<<<<< HEAD
 whitelist(){
 	mc_command "whitelist list"
 	sleep 1s
 	whitelist=$(tac $MCPATH/server.log | grep -m 1 "White-listed players:")
-=======
-get_script_location() {
-	echo $(dirname "$(readlink -e "$0")")
+	
+    echo
+    echo "Currently there are the following players on your whitelist:"
+    echo
+    echo ${whitelist:49} | sed 's/, /\n/g'
 }
 
->>>>>>> origin/pidfile
-
-	echo
-	echo "Currently there are the following players on your whitelist:"
-	echo
-	echo ${whitelist:49} | sed 's/, /\n/g'
+get_script_location() {
+	echo $(dirname "$(readlink -e "$0")")
 }
 
 case "$1" in
