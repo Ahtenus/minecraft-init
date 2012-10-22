@@ -209,6 +209,9 @@ log_roll() {
 
 }
 get_worlds() {
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
+
 	a=1
 	for NAME in $(ls $WORLDSTORAGE)
 	do
@@ -224,17 +227,33 @@ get_worlds() {
 			a=$a+1
 		fi
 	done
+
+	IFS=$SAVEIFS
 }
 mc_whole_backup() {
 	echo "backing up entire setup into $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
+	locationOfScript=$(dirname "$(readlink -e "$0")")
 	as_user "mkdir -p $path"
 	
-	if [ "$COMPRESS_WHOLEBACKUP" ]
+	if [ -r "$locationOfScript/exclude.list" ]
 	then
-		as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
+		echo "...except the following files and/or dirs:"
+		cat $locationOfScript/exclude.list
+		
+		if [ "$COMPRESS_WHOLEBACKUP" ]
+		then
+			as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH -X $locationOfScript/exclude.list"
+		else
+			as_user "tar -cpf $path/whole-backup.tar $MCPATH -X $locationOfScript/exclude.list"
+		fi
 	else
-		as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+		if [ "$COMPRESS_WHOLEBACKUP" ]
+		then
+			as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
+		else
+			as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+		fi
 	fi
 }
 mc_world_backup() {
@@ -339,56 +358,96 @@ to_disk() {
 		fi
 	done
 }
+
+check_update_vanilla() {
+	MC_SERVER_URL=`wget -q -O - http://minecraft.net/download | grep minecraft_server.jar\ | cut -d \" -f 6`
+
+	echo "Checking for update for minecraft_server.jar (Vanilla)"
+	as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
+
+	if [ -r "$MCPATH/minecraft_server.jar.update" ]
+	then
+		if `diff $MCPATH/$MC_JAR $MCPATH/minecraft_server.jar.update >/dev/null`
+		then
+			echo "You are already running the latest version of minecraft_server.jar."
+			return 1
+		else
+			echo "Update of $MC_JAR is needed."
+			return 0
+		fi
+	else
+		echo "Something went wrong. Couldn't download minecraft_server.jar"
+	fi
+		
+}
+
+get_cb_release_channel() {
+	CB_URL="http://dl.bukkit.org/latest-"
+
+	case $CB_RELEASE in
+		unstable|UNSTABLE|Unstable|dev|development)
+			echo $CB_URL"dev/craftbukkit.jar"
+		;;
+		beta|Beta|BETA)
+			echo $CB_URL"beta/craftbukkit.jar"
+		;;
+		*)
+			echo $CB_URL"rb/craftbukkit.jar"
+		;;
+	esac
+}
+
+check_update_craftbukkit() {
+	echo "Checking for update for craftbukkit.jar"
+	echo "You are on release channel \"$CB_RELEASE\""
+
+	as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $(get_cb_release_channel)"
+	if [ -r "$MCPATH/craftbukkit.jar.update" ]
+	then
+		if `diff $MCPATH/$CB_JAR $MCPATH/craftbukkit.jar.update >/dev/null`
+		then
+			echo "You are already running the latest version of craftbukkit.jar."
+			return 1
+		else
+			echo "Update of $CB_JAR is needed."
+			return 0
+		fi
+	else
+		echo "Something went wrong. Couldn't download craftbukkit.jar"
+	fi
+}
+
 mc_update() {
 	if is_running
 	then
 		echo "$SERVICE is running! Will not start update."
 	else
-		# Update minecraft_server.jar
-		echo "Updating minecraft_server.jar...."
-		MC_SERVER_URL=`wget -q -O - http://minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
-		as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
-		if [ -f $MCPATH/minecraft_server.jar.update ]
+		if check_update_vanilla
 		then
-			if `diff $MCPATH/$MC_JAR $MCPATH/minecraft_server.jar.update >/dev/null`
+			if [ -r "$MCPATH/minecraft_server.jar.update" ]
 			then
-				echo "You are already running the latest version of the Minecraft server."
-				as_user "rm $MCPATH/minecraft_server.jar.update"
-			else
 				as_user "mv $MCPATH/minecraft_server.jar.update $MCPATH/$MC_JAR"
-				echo "Minecraft successfully updated."
+				echo "Thats it. Update of $MC_JAR done."
+			else
+				echo "Something went wrong. Couldn't replace your original $MC_JAR with minecraft_server.jar.update"
 			fi
 		else
-			echo "Minecraft update could not be downloaded."
+			echo "Not updating $MB_JAR. It's not necessary"
+			as_user "rm $MCPATH/minecraft_server.jar.update"
 		fi
 
-		# Update craftbukkit.jar
-		echo "Updating craftbukkit..."
-        CB_URL="http://dl.bukkit.org/latest-"
-		case $CB_RELEASE in
-			unstable|UNSTABLE|Unstable|dev|development)
-				CB_SERVER_URL=$CB_URL"dev/craftbukkit.jar"
-				;;
-            beta|Beta|BETA)
-                CB_SERVER_URL=$CB_URL"beta/craftbukkit.jar"
-                ;;
-			*)
-				CB_SERVER_URL=$CB_URL"rb/craftbukkit.jar"
-				;;
-		esac
-		as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
-		if [ -f $MCPATH/craftbukkit.jar.update ]
+		if check_update_craftbukkit
 		then
-			if `diff $MCPATH/$CB_JAR $MCPATH/craftbukkit.jar.update > /dev/null`
+			if [ -r "$MCPATH/craftbukkit.jar.update" ]
 			then
-				echo "You are already running the latest version of CraftBukkit."
-				as_user "rm $MCPATH/craftbukkit.jar.update"
-			else
 				as_user "mv $MCPATH/craftbukkit.jar.update $MCPATH/$CB_JAR"
-				echo "CraftBukkit successfully updated."
+				echo "Thats it. Update of $CB_JAR done."
+			else
+				echo "Something went wrong. Couldn't replace your original $CB_JAR with craftbukkit.jar.update"
 			fi
 		else
-			echo "CraftBukkit update could not be downloaded."
+			echo "Not updating $CB_JAR. It's not necessary"
+			as_user "rm $MCPATH/craftbukkit.jar.update"
 		fi
 	fi
 }
@@ -466,11 +525,20 @@ overviewer_copy_worlds() {
 	done
 }
 
+whitelist(){
+	mc_command "whitelist list"
+	sleep 1s
+	whitelist=$(tac $MCPATH/server.log | grep -m 1 "White-listed players:")
+	
+    echo
+    echo "Currently there are the following players on your whitelist:"
+    echo
+    echo ${whitelist:49} | sed 's/, /\n/g'
+}
+
 get_script_location() {
 	echo $(dirname "$(readlink -e "$0")")
 }
-
-
 
 case "$1" in
 	start)
@@ -505,6 +573,13 @@ case "$1" in
 		check_links
 		to_ram
 		mc_start
+		;;
+	whitelist)
+		if is_running; then
+			whitelist
+		else
+			echo "Server not running."
+		fi
 		;;
 	whitelist-reload)
 		# Reloads the whitelist
@@ -548,6 +623,12 @@ case "$1" in
 		else
 			mc_whole_backup
 		fi
+		;;
+	check-update)
+		check_update_vanilla
+		check_update_craftbukkit
+		as_user "rm $MCPATH/minecraft_server.jar.update"
+		as_user "rm $MCPATH/craftbukkit.jar.update"
 		;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
@@ -673,6 +754,7 @@ case "$1" in
 		echo -e "   restart \t\t Restarts the server"
 		echo -e "   backup \t\t Backups the worlds defined in the script"
 		echo -e "   whole-backup \t Backups the entire server folder"
+		echo -e "   check-update \t Checks for updates of $CB_JAR and $MC_JAR"
 		echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit"
 		echo -e "   log-roll \t\t Moves and gzips the logfile"
 		echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage"
@@ -687,6 +769,7 @@ case "$1" in
 		echo -e "   worlds \t\t Displays a list of available worlds"
 		echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD"
 		echo -e "   overviewer WORLD \t Creates a map of the WORLD with Minecraft-Overviewer"
+		echo -e "   whitelist \t\t Prints the current whitelist"
 		echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist"
 		echo -e "   whitelist-reload \t Reloads the whitelist"
 		;;
