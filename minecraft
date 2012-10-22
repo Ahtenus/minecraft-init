@@ -48,7 +48,7 @@ as_user() {
 is_running(){
 	# Checks for the minecraft servers screen session
 	# returns true if it exists.
-	pidfile=$(get_script_location)/${SCREEN}.pid
+	pidfile=$(MCPATH)/${SCREEN}.pid
 
 	if [ -r "$pidfile" ]
 	then
@@ -91,7 +91,7 @@ datepath() {
 	fi
 }
 mc_start() {
-	pidfile=$(get_script_location)/${SCREEN}.pid
+	pidfile=$(MCPATH)/${SCREEN}.pid
 
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
 	as_user "echo $(screen -list | grep $SCREEN | cut -f1 -d'.' | sed 's/\W//g') > $pidfile"
@@ -160,7 +160,7 @@ mc_say() {
 }
 
 mc_stop() {
-	pidfile=$(get_script_location)/${SCREEN}.pid
+	pidfile=$(MCPATH)/${SCREEN}.pid
 	#
 	# Stops the server
 	#
