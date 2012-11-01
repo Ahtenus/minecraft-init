@@ -61,13 +61,13 @@ is_running(){
 			return 1
 		fi
 	else
-		if ps ax | grep -v grep | grep "$SCREEN $INVOCATION" > /dev/null
+		if ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" > /dev/null
 		then
 			echo "No pidfile found, but server's running."
 			echo "Re-creating the pidfile."
 			
 			pid=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
-			echo $pid > $pidfile
+			as_user "echo $pid > $pidfile"
 
 			return 0
 		else
@@ -94,7 +94,7 @@ mc_start() {
 	pidfile=${MCPATH}/${SCREEN}.pid
 
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-	as_user "echo $(screen -list | grep $SCREEN | cut -f1 -d'.' | sed 's/\W//g') > $pidfile"
+	as_user "screen -list | grep $SCREEN | cut -f1 -d'.' | sed 's/\W//g' > $pidfile"
 
 	#
 	# Waiting for the server to start
