@@ -11,7 +11,7 @@
 MC_JAR="minecraft_server.jar"
 
 # Name of craftbukkit jar 
-CB_JAR="craftbukkit_server.jar"
+CB_JAR="craftbukkit.jar"
 
 # Define the release of CraftBukkit to use (stable or unstable)
 CB_RELEASE="stable"
@@ -20,13 +20,18 @@ CB_RELEASE="stable"
 SERVICE=$CB_JAR
 
 # Name to use for the screen instance
-SCREEN="minecraft"
+SCREEN="server_screen"
 
 # User that should run the server
 USERNAME="minecraft"
 
 # Path to minecraft server directory 
 MCPATH="/home/${USERNAME}/minecraft"
+
+# Where the worlds are located on the disk. Can not be the same as MCPATH.
+# You need to move your worlds to this directory manually, the script
+# will then handle the nessessay symlinks.
+WORLDSTORAGE="${MCPATH}/worlds"
 
 # Number of CPUs/cores to use
 CPU_COUNT=2
@@ -39,14 +44,21 @@ INITMEM="2048M"
 # of RAM available the size of your map and the RAM-consumption of your base system.
 MAXMEM="2048M"
 
+# Whether to output commands for the plugin ConsoleLikeChat ($1 is the command to run)
+FORMAT='$1'
+
+# Settings for backups
+# ===============================
+
 # Location for world backups
 BACKUPPATH="/home/${USERNAME}/mcbackup/worlds"
 
-# Format for world backup (tar or zip).
-BACKUPFORMAT="tar"  
+# Where the whole minecraft directory is copied when whole-backup is executed
+# whole-backup is a complete uncompressed backup of the whole server folder.
+WHOLEBACKUP="/home/${USERNAME}/mcbackup/server"
 
-# Whether to output commands for the plugin ConsoleLikeChat ($1 is the command to run)
-FORMAT='$1'
+# Format for world backup (tar or zip).
+BACKUPFORMAT="tar" 
 
 # Normally backups will be put in a subfolder to $BACKUPPATH with todays date
 # and the backups themselves will have a timestamp.
@@ -55,15 +67,7 @@ FORMAT='$1'
 # in $BACKUPPATH without timestamp to be compatible with
 # [backup rotation script](https://github.com/adamfeuer/rotate-backups)
 #
-# BACKUPSCRIPTCOMPATIBLE=YES
-
-# Location for old logs
-# Used by the log-roll command
-LOGPATH="/home/${USERNAME}/mcbackup/logs"
-
-# Where the whole minecraft directory is copied when whole-backup is executed
-# whole-backup is a complete uncompressed backup of the whole server folder.
-WHOLEBACKUP="/home/${USERNAME}/mcbackup/server"
+BACKUPSCRIPTCOMPATIBLE=YES
 
 # Compress the whole backup with bzip2?
 # Note that this may not save a lot of disk space since there can be a lot of files
@@ -75,29 +79,39 @@ WHOLEBACKUP="/home/${USERNAME}/mcbackup/server"
 # backup will not be very high.
 COMPRESS_WHOLEBACKUP=YES
 
-# Where the worlds are located on the disk. Can not be the same as MCPATH.
-# You need to move your worlds to this directory manually, the script
-# will then handle the nessessay symlinks.
-WORLDSTORAGE="${MCPATH}/worldstorage"
+
+# Settings for log rolling
+# ===============================
+
+# Location for old logs
+# Used by the log-roll command
+LOGPATH="/home/${USERNAME}/mcbackup/logs"
+
+# Whether or not to gzip logs (must be commented out for no - DO NOT CHANGE TO NO)
+#
+GZIPLOGS=YES
+
+# What to append to the logfile name (Leave blank for nothing)
+LOGFILEAPPEND="logfile_"
 
 
 # Settings for overviewer command
 # ===============================
 
 # Where the Map is generated
-OUTPUTMAP="/home/${USERNAME}/mcmap"
+OUTPUTMAP="/home/${USERNAME}/mc-overviewer/render"
 
-# Path to Minecraft-Overviewer. If using an APT repository installed version, set to: "apt".
-OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
+# Path to Minecraft-Overviewer
+OVPATH="/home/${USERNAME}/mc-overviewer/Minecraft-Overviewer"
 
 # Path for the config file of Overviewer
-OVCONFIGPATH="/home/${USERNAME}/Minecraft-Overviewer"
+OVCONFIGPATH="/home/${USERNAME}/mc-overviewer"
 
 # Name of Overviewer config file
-OVCONFIGNAME="config_over.py"
+OVCONFIGNAME="config.py"
 
 # Path for backup worlds
-OVBACKUP="/home/${USERNAME}/mcbackup/overviewer"
+OVBACKUP="/home/${USERNAME}/mc-overviewer/overviewerbackups"
 
 # Things to leave alone ;)
 # =====================
