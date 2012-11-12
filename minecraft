@@ -53,20 +53,28 @@ is_running(){
 	if [ -r "$pidfile" ]
 	then
 		pid=$(cat $pidfile)
-		if ps ax | grep -v grep | grep ${pid} | grep "${SCREEN}" > /dev/null
+		# if ps ax | grep -v grep | grep ${pid} | grep "screen -dmS $SCREEN" > /dev/null
+		if ps ax | grep -v grep | grep "SCREEN -dmS $SCREEN" > /dev/null
 		then
-			return 0
-		else 
+			if ps ax | grep -v grep | grep "$pid" > /dev/null
+			then
+				return 0
+			else
+				echo "Rogue pidfile found!"
+				return 1
+			fi
+		else
 			echo "Rogue pidfile found!"
 			return 1
 		fi
 	else
-		if ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" > /dev/null
+		# if ps ax | grep -v grep | grep "screen -dmS ${SCREEN}" | "${INVOCATION}" > /dev/null
+		if ps ax | grep -v grep | grep "$SCREEN" | grep "$INVOCATION" > /dev/null
 		then
 			echo "No pidfile found, but server's running."
 			echo "Re-creating the pidfile."
 			
-			pid=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
+			pid=$(ps ax | grep -v grep | grep "$SCREEN" | grep "$INVOCATION" | cut -f1 -d' ')
 			as_user "echo $pid > $pidfile"
 
 			return 0
@@ -533,7 +541,7 @@ force_exit() {	# Kill the server running messily in an emergency
 	echo ""
 	echo "SIGINIT CALLED - FORCE EXITING!"
 	pidfile=${MCPATH}/${SCREEN}.pid
-	rm -f $pidfile
+	# rm $pidfile
 	echo "KILLING SERVER PROCESSES!!!"
 		# Display which processes are being killed
 		ps aux | grep -e 'java -Xmx' | grep -v grep | awk '{print $2}' | xargs -i echo "Killing PID: " {}
@@ -704,20 +712,12 @@ case "$1" in
 		;;
 	log-roll)
 		# Moves and Gzips the logfile
-		MONTHANDYEAR=`date +%m-%Y`
-		if [ ! -d $LOGPATH/$MONTHANDYEAR ]; then
-			as_user "mkdir -p $LOGPATH/$MONTHANDYEAR"
+		if [ ! -d $LOGPATH ]; then
+			as_user "mkdir -p $LOGPATH"
 		fi
-
-		if [[ $GZIPLOGS ]]; then
-			path=`datepath $LOGPATH/$MONTHANDYEAR/$LOGFILEAPPEND .log.gz .log`
-			as_user "cp $MCPATH/server.log $path && gzip $path"
-		else
-			path=`datepath $LOGPATH/$MONTHANDYEAR/$LOGFILEAPPEND .log .log`
-			as_user "cp $MCPATH/server.log $path"
-		fi
-
-		# only if previous command was successful 
+		path=`datepath $LOGPATH/server_ .log.gz .log`
+		as_user "cp $MCPATH/server.log $path && gzip $path"
+		# only if previous command was successful
 		if [ $? -eq 0 ]; then
 			# turnacate the existing log without restarting server
 			as_user "cp /dev/null $MCPATH/server.log"
@@ -814,7 +814,7 @@ case "$1" in
 		WIDTH=`stty size | cut -d ' ' -f 2`            # Get terminal's character width
 		pstree | grep MDSImporte | cut -c 1-${WIDTH}   # Chop output after WIDTH chars
 		
-		echo "Killing the server is an EMERGENCY procedure, and should not be used to perform a normal shutdown! All changes younger than 15 minutes could be permanantly lost! Are you ABSOLUTELY POSITIVE this is what you want to do?"
+		echo "Killing the server is an EMERGENCY procedure, and should not be used to perform a normal shutdown! All changes younger than 15 minutes could be permanantly lost and WORLD CORRUPTION is possible! Are you ABSOLUTELY POSITIVE this is what you want to do?"
 		echo "Please put \"Yes\", or \"No\": "
 		read KILL_SERVER
 		case "$KILL_SERVER" in	# Determine which option was specified
