@@ -537,11 +537,11 @@ whitelist(){
 	echo ${whitelist:49} | sed 's/, /\n/g'
 }
 
-force_exit() {	# Kill the server running messily in an emergency
+force_exit() {	# Kill the server running (messily) in an emergency
 	echo ""
 	echo "SIGINIT CALLED - FORCE EXITING!"
 	pidfile=${MCPATH}/${SCREEN}.pid
-	# rm $pidfile
+	rm $pidfile
 	echo "KILLING SERVER PROCESSES!!!"
 		# Display which processes are being killed
 		ps aux | grep -e 'java -Xmx' | grep -v grep | awk '{print $2}' | xargs -i echo "Killing PID: " {}
