@@ -52,7 +52,7 @@ is_running(){
 
 	if [ -r "$pidfile" ]
 	then
-		pid=$(cat $pidfile)
+		pid=$(head -1 $pidfile)
 		if ps ax | grep -v grep | grep ${pid} | grep "${SCREEN}" > /dev/null
 		then
 			return 0
