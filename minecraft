@@ -18,7 +18,7 @@
 # Based on http://www.minecraftwiki.net/wiki/Server_startup_script
 # Support for multiworld by Benni-chan
 # Log rolls without needing restarts by Solorvox
-
+# Option for killing server in an emergency by jbondhus
 
 # Loads config file
 
@@ -36,7 +36,6 @@ then
 	exit
 fi
 
-
 ME=`whoami`
 as_user() {
 	if [ $ME == $USERNAME ] ; then
@@ -45,6 +44,7 @@ as_user() {
 		su $USERNAME -s /bin/bash -c "$1"
 	fi
 }
+
 is_running(){
 	# Checks for the minecraft servers screen session
 	# returns true if it exists.
@@ -75,6 +75,7 @@ is_running(){
 		fi
 	fi
 }
+
 datepath() {
 	# datepath path filending-to-check returned-filending
 
@@ -90,11 +91,12 @@ datepath() {
 		echo $1`date +%F`$3
 	fi
 }
+
 mc_start() {
 	pidfile=${MCPATH}/${SCREEN}.pid
 
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-	as_user "screen -list | grep $SCREEN | cut -f1 -d'.' | sed 's/\W//g' > $pidfile"
+	as_user "screen -list | grep '\.$SCREEN' | cut -f1 -d'.' | tr -d -c 0-9 > $pidfile"
 
 	#
 	# Waiting for the server to start
@@ -118,12 +120,12 @@ mc_start() {
 }
 
 mc_command() {
-        if is_running
-        then
-                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
-        else
-                echo "$SERVICE was not running. Not able to run command."
-        fi
+		if is_running
+		then
+				as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
+		else
+				echo "$SERVICE was not running. Not able to run command."
+		fi
 }
 
 mc_saveoff() {
@@ -189,25 +191,9 @@ mc_stop() {
 			exit 1
 		fi
 	done
-	as_user "rm $pidfile"
 	echo "$SERVICE is now shut down."
 }
-log_roll() {
-        if [ ! -d $LOGPATH ]; then
-                as_user "mkdir -p $LOGPATH"
-        fi
-        path=`datepath $LOGPATH/server_ .log.gz .log`
-        as_user "cp $MCPATH/server.log $path && gzip $path"
-	# only if previous command was successful
-        if [ $? -eq 0 ]; then
-                # turnacate the existing log without restarting server
-                as_user "cp /dev/null $MCPATH/server.log"
-                as_user "echo \"Previous logs rolled to $path\" > $MCPATH/server.log "
-        else    
-                echo "Failed to rotate logs to $LOGPATH/server_$path.log.gz"
-        fi
 
-}
 get_worlds() {
 	SAVEIFS=$IFS
 	IFS=$(echo -en "\n\b")
@@ -230,6 +216,7 @@ get_worlds() {
 
 	IFS=$SAVEIFS
 }
+
 mc_whole_backup() {
 	echo "backing up entire setup into $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
@@ -256,6 +243,7 @@ mc_whole_backup() {
 		fi
 	fi
 }
+
 mc_world_backup() {
 	#
 	# Backup the worlds and puts them in a folder for each day (unless $BACKUPSCRIPTCOMPATIBLE is set)
@@ -303,6 +291,7 @@ mc_world_backup() {
 		esac
 	done
 }
+
 check_links() {
 	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
@@ -327,12 +316,13 @@ check_links() {
 				fi
 			fi
 		else
-		    echo "Could not process the world named '${WORLDNAME[$INDEX]}'. Please move all worlds to ${WORLDSTORAGE}."
+			echo "Could not process the world named '${WORLDNAME[$INDEX]}'. Please move all worlds to ${WORLDSTORAGE}."
 
-		    exit 1
+			exit 1
 		fi
 	done
 }
+
 to_ram() {
 	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
@@ -347,6 +337,7 @@ to_ram() {
 		fi
 	done
 }
+
 to_disk() {
 	get_worlds
 	for INDEX in ${!WORLDNAME[@]}
@@ -377,8 +368,7 @@ check_update_vanilla() {
 		fi
 	else
 		echo "Something went wrong. Couldn't download minecraft_server.jar"
-	fi
-		
+	fi	
 }
 
 get_cb_release_channel() {
@@ -451,6 +441,7 @@ mc_update() {
 		fi
 	fi
 }
+
 change_ramdisk_state() {
 	if [ ! -e $WORLDSTORAGE/$1 ]
 	then
@@ -468,47 +459,48 @@ change_ramdisk_state() {
 	fi
 	echo "Changes will only take effect after server is restarted."	
 }
+
 overviewer_start() {
-        if [ ! -e $OVPATH/overviewer.py ]
-        then
-                if [ ! "$OVPATH" == "apt" ]
-                then
-                        echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
-                        exit 1
-                else
-                        echo "Using APT repository installed Minecraft-Overviewer"
-                fi
-        fi
-        if [ ! -e $OUTPUTMAP ]
-        then
-                as_user "mkdir -p $OUTPUTMAP"
-        fi
-        if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
-        then
-                echo "Start generating map with Minecraft-Overviewer..."
-                if [ "$OVPATH" == "apt" ]
-                then
-                        as_user "overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
-                else
-                        as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
-                fi
-                echo "Map generated."
-        else
-                echo "No config file found. Start with default config..."
-                if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
-                then
-                        echo "World \"$1\" not found."
-                else
-                        echo "Start generating map with Minecraft-Overviewer..."
-                        if [ "$OVPATH" == "apt" ]
-                        then
-                                as_user "nice overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
-                        else
-                                as_user "nice python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
-                        fi
-                        echo "Map generated."
-                fi
-        fi
+		if [ ! -e $OVPATH/overviewer.py ]
+		then
+				if [ ! "$OVPATH" == "apt" ]
+				then
+						echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
+						exit 1
+				else
+						echo "Using APT repository installed Minecraft-Overviewer"
+				fi
+		fi
+		if [ ! -e $OUTPUTMAP ]
+		then
+				as_user "mkdir -p $OUTPUTMAP"
+		fi
+		if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
+		then
+				echo "Start generating map with Minecraft-Overviewer..."
+				if [ "$OVPATH" == "apt" ]
+				then
+						as_user "overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+				else
+						as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+				fi
+				echo "Map generated."
+		else
+				echo "No config file found. Start with default config..."
+				if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
+				then
+						echo "World \"$1\" not found."
+				else
+						echo "Start generating map with Minecraft-Overviewer..."
+						if [ "$OVPATH" == "apt" ]
+						then
+								as_user "nice overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
+						else
+								as_user "nice python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
+						fi
+						echo "Map generated."
+				fi
+		fi
 }
 
 overviewer_copy_worlds() {
@@ -530,15 +522,36 @@ whitelist(){
 	sleep 1s
 	whitelist=$(tac $MCPATH/server.log | grep -m 1 "White-listed players:")
 	
-    echo
-    echo "Currently there are the following players on your whitelist:"
-    echo
-    echo ${whitelist:49} | sed 's/, /\n/g'
+	echo
+	echo "Currently there are the following players on your whitelist:"
+	echo
+	echo ${whitelist:49} | sed 's/, /\n/g'
+}
+
+force_exit() {	# Kill the server running (messily) in an emergency
+	echo ""
+	echo "SIGINIT CALLED - FORCE EXITING!"
+	pidfile=${MCPATH}/${SCREEN}.pid
+	rm $pidfile
+	echo "KILLING SERVER PROCESSES!!!"
+		# Display which processes are being killed
+		ps aux | grep -e 'java -Xmx' | grep -v grep | awk '{print $2}' | xargs -i echo "Killing PID: " {}
+		ps aux | grep -e 'SCREEN -dmS minecraft java' | grep -v grep | awk '{print $2}' | xargs -i echo "Killing PID: " {}
+		ps aux | grep -e '/etc/init.d/minecraft' | grep -v grep | awk '{print $2}' | xargs -i echo "Killing PID: " {}
+		
+		# Kill the processes
+		ps aux | grep -e 'java -Xmx' | grep -v grep | awk '{print $2}' | xargs -i kill {}
+		ps aux | grep -e 'SCREEN -dmS minecraft java' | grep -v grep | awk '{print $2}' | xargs -i kill {}
+		ps aux | grep -e '/etc/init.d/minecraft' | grep -v grep | awk '{print $2}' | xargs -i kill {}
+
+	exit 1
 }
 
 get_script_location() {
 	echo $(dirname "$(readlink -e "$0")")
 }
+
+trap force_exit SIGINT
 
 case "$1" in
 	start)
@@ -611,7 +624,7 @@ case "$1" in
 		fi
 		;;
 	whole-backup)
-                # Backup everything
+				# Backup everything
 		if is_running; then
 			mc_say "COMPLETE SERVER BACKUP IN 10 SECONDS.";
 			mc_say "WARNING: WILL RESTART SERVER SOFTWARE!"
@@ -690,7 +703,19 @@ case "$1" in
 		;;
 	log-roll)
 		# Moves and Gzips the logfile
-		log_roll
+		if [ ! -d $LOGPATH ]; then
+			as_user "mkdir -p $LOGPATH"
+		fi
+		path=`datepath $LOGPATH/server_ .log.gz .log`
+		as_user "cp $MCPATH/server.log $path && gzip $path"
+		# only if previous command was successful
+		if [ $? -eq 0 ]; then
+			# turnacate the existing log without restarting server
+			as_user "cp /dev/null $MCPATH/server.log"
+			as_user "echo \"Previous logs rolled to $path\" > $MCPATH/server.log "
+		else    
+			echo "Failed to rotate logs to $LOGPATH/server_$path.log.gz"
+		fi
 		;;
 	last)
 		# Greps for recently logged in users
@@ -744,6 +769,60 @@ case "$1" in
 			overviewer_copy_worlds
 			overviewer_start $2
 		fi
+		;;
+	screen)
+		if is_running; then
+			screen -r $SCREEN
+		else
+		echo "Server is not running. Do you want to start it?"
+		echo "Please put \"Yes\", or \"No\": "
+		read START_SERVER
+		case "$START_SERVER" in
+			[Yy]|[Yy][Ee][Ss])
+				check_links
+				to_ram
+				mc_start
+				screen -r $SCREEN
+				;;
+			[Nn]|[Nn][Oo])
+				clear
+				echo "Aborting startup!"
+				sleep 1
+				clear
+				exit 1
+				;;
+			*)
+				clear
+				echo "Invalid input"
+				sleep 1
+				clear
+				exit 1
+				;;
+		esac
+		fi
+		;;
+	kill)
+		WIDTH=`stty size | cut -d ' ' -f 2`            # Get terminal's character width
+		pstree | grep MDSImporte | cut -c 1-${WIDTH}   # Chop output after WIDTH chars
+		
+		echo "Killing the server is an EMERGENCY procedure, and should not be used to perform a normal shutdown! All changes younger than 15 minutes could be permanantly lost and WORLD CORRUPTION is possible! Are you ABSOLUTELY POSITIVE this is what you want to do?"
+		echo "Please put \"Yes\", or \"No\": "
+		read KILL_SERVER
+		case "$KILL_SERVER" in	# Determine which option was specified
+			[Yy]|[Yy][Ee][Ss])	# If yes, kill the server
+				echo "KILLING SERVER PROCESSES!!!"
+				force_exit
+				exit 1
+				;;
+			[Nn]|[Nn][Oo])	# If no, abort and exit 1
+				echo "Aborting!"
+				exit 1
+				;;
+			*)	# If anything else, exit 1
+				echo "Error: Invalid Input!"
+				exit 1
+				;;
+		esac
 		;;
 	help|--help|-h)
 		echo "Usage: $0 COMMAND"
