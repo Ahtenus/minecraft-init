@@ -53,28 +53,20 @@ is_running(){
 	if [ -r "$pidfile" ]
 	then
 		pid=$(cat $pidfile)
-		# if ps ax | grep -v grep | grep ${pid} | grep "screen -dmS $SCREEN" > /dev/null
-		if ps ax | grep -v grep | grep "SCREEN -dmS $SCREEN" > /dev/null
+		if ps ax | grep -v grep | grep ${pid} | grep "${SCREEN}" > /dev/null
 		then
-			if ps ax | grep -v grep | grep "$pid" > /dev/null
-			then
-				return 0
-			else
-				echo "Rogue pidfile found!"
-				return 1
-			fi
-		else
+			return 0
+		else 
 			echo "Rogue pidfile found!"
 			return 1
 		fi
 	else
-		# if ps ax | grep -v grep | grep "screen -dmS ${SCREEN}" | "${INVOCATION}" > /dev/null
-		if ps ax | grep -v grep | grep "$SCREEN" | grep "$INVOCATION" > /dev/null
+		if ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" > /dev/null
 		then
 			echo "No pidfile found, but server's running."
 			echo "Re-creating the pidfile."
 			
-			pid=$(ps ax | grep -v grep | grep "$SCREEN" | grep "$INVOCATION" | cut -f1 -d' ')
+			pid=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
 			as_user "echo $pid > $pidfile"
 
 			return 0
@@ -104,7 +96,7 @@ mc_start() {
 	pidfile=${MCPATH}/${SCREEN}.pid
 
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-	as_user "screen -list | grep $SCREEN | cut -f1 -d'.' | sed 's/\W//g' > $pidfile"
+	as_user "screen -list | grep '\.$SCREEN' | cut -f1 -d'.' | tr -d -c 0-9 > $pidfile"
 
 	#
 	# Waiting for the server to start
@@ -199,7 +191,6 @@ mc_stop() {
 			exit 1
 		fi
 	done
-	as_user "rm $pidfile"
 	echo "$SERVICE is now shut down."
 }
 
