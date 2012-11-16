@@ -331,6 +331,7 @@ to_ram() {
 		then
 			if [ -L $MCPATH/${WORLDNAME[$INDEX]} ]
 			then
+				as_user "mkdir -p $RAMDISK"
 				as_user "rsync -rt --exclude 'ramdisk' ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}/ $RAMDISK/${WORLDNAME[$INDEX]}"
 				echo "${WORLDNAME[$INDEX]} copied to ram"
 			fi
