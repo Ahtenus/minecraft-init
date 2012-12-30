@@ -299,6 +299,7 @@ check_links() {
 		if [[ -L $MCPATH/${WORLDNAME[$INDEX]} || ! -a $MCPATH/${WORLDNAME[$INDEX]} ]]
 		then
 			link=`ls -l $MCPATH/${WORLDNAME[$INDEX]} | awk '{print $11}'`
+			as_user "find -L $MCPATH -type l -delete"
 			if ${WORLDRAM[$INDEX]}
 			then
 				if [ "$link" != "$RAMDISK/${WORLDNAME[$INDEX]}" ]
