@@ -69,6 +69,11 @@ BACKUPFORMAT="tar"
 #
 BACKUPSCRIPTCOMPATIBLE=YES
 
+# If WORLDEDITCOMPATIBLE is set the world backups will be created compatible to WorldEdit
+# in $BACKUPPATH as WORLD_NAME/DATE.(tar.bz2|zip) with the requested directory structure
+#
+# WORLDEDITCOMPATIBLE=YES
+
 # Compress the whole backup with bzip2?
 # Note that this may not save a lot of disk space since there can be a lot of files
 # in your server directory, that are already compressed, but it can slow down the

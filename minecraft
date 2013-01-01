@@ -264,7 +264,12 @@ mc_world_backup() {
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
 		case "$BACKUPFORMAT" in
 			tar)
-				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+				if [ "$WORLDEDITCOMPATIBLE" ]
+				# If this is set tars will be created compatible to WorldEdit
+				then
+					as_user "mkdir -p $BACKUPPATH/${WORLDNAME[$INDEX]}"
+					path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}/ .tar.bz2 .tar.bz2`
+				elif [ "$BACKUPSCRIPTCOMPATIBLE" ]
 				# If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
 				# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
 				then
@@ -273,17 +278,32 @@ mc_world_backup() {
 					as_user "mkdir -p $BACKUPPATH/${today}"
 					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
 				fi
-				as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+				if [ "$WORLDEDITCOMPATIBLE" ]
+				# Don't store the complete path
+				then
+					as_user "cd $MCPATH && tar -hcjf $path ${WORLDNAME[$INDEX]}"
+				else
+					as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+				fi
 				;;
 			zip)
-				if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+				if [ "$WORLDEDITCOMPATIBLE" ]
+				then
+					as_user "mkdir -p $BACKUPPATH/${WORLDNAME[$INDEX]}"
+					path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}/ .zip .zip`
+				elif [ "$BACKUPSCRIPTCOMPATIBLE" ]
 				then
 					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.zip
 				else
 					as_user "mkdir -p $BACKUPPATH/${today}"
 					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
 				fi
-				as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
+				if [ "$WORLDEDITCOMPATIBLE" ]
+				then
+					as_user "cd $MCPATH && zip -rq $path ${WORLDNAME[$INDEX]}"
+				else
+					as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
+				fi
 				;;
 			*)
 				echo "$BACKUPFORMAT is not a supported backup format"
