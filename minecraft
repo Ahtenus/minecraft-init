@@ -57,7 +57,14 @@ is_running(){
 		then
 			return 0
 		else 
-			echo "Rogue pidfile found!"
+			if [ -z "$isInStop" ]
+			then
+				if [ -z "$roguePrinted" ]
+				then
+					roguePrinted=1
+					echo "Rogue pidfile found!"
+				fi
+			fi
 			return 1
 		fi
 	else
@@ -67,6 +74,7 @@ is_running(){
 			echo "Re-creating the pidfile."
 			
 			pid=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
+			check_permissions
 			as_user "echo $pid > $pidfile"
 
 			return 0
@@ -94,6 +102,7 @@ datepath() {
 
 mc_start() {
 	pidfile=${MCPATH}/${SCREEN}.pid
+	check_permissions
 
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
 	as_user "screen -list | grep '\.$SCREEN' | cut -f1 -d'.' | tr -d -c 0-9 > $pidfile"
@@ -176,6 +185,7 @@ mc_stop() {
 	# Waiting for the server to shut down
 	#
 	seconds=0
+	isInStop=1
 	while is_running
 	do
 		sleep 1 
@@ -191,6 +201,9 @@ mc_stop() {
 			exit 1
 		fi
 	done
+	as_user "rm $pidfile"
+	unset isInStop
+	is_running
 	echo "$SERVICE is now shut down."
 }
 
@@ -570,6 +583,13 @@ force_exit() {	# Kill the server running (messily) in an emergency
 
 get_script_location() {
 	echo $(dirname "$(readlink -e "$0")")
+}
+
+check_permissions() {
+	as_user "touch $pidfile"
+	if ! as_user "test -w '$pidfile'" ; then 
+		echo "Check Permissions. Cannot write to $pidfile. Correct the permissions and then excute: $0 status"
+	fi
 }
 
 trap force_exit SIGINT
