@@ -592,6 +592,14 @@ check_permissions() {
 	fi
 }
 
+show_screen() {
+        if [ $ME == $USERNAME ] ; then
+                bash -c 'script /dev/null -q -c "screen -rx $SCREEN"'
+        else
+                su $USERNAME -s /bin/bash -c 'script /dev/null -q -c "screen -rx $SCREEN"'
+        fi
+}
+
 trap force_exit SIGINT
 
 case "$1" in
@@ -813,7 +821,7 @@ case "$1" in
 		;;
 	screen)
 		if is_running; then
-			screen -r $SCREEN
+			show_screen
 		else
 		echo "Server is not running. Do you want to start it?"
 		echo "Please put \"Yes\", or \"No\": "
@@ -823,7 +831,7 @@ case "$1" in
 				check_links
 				to_ram
 				mc_start
-				screen -r $SCREEN
+				show_screen
 				;;
 			[Nn]|[Nn][Oo])
 				clear
@@ -871,6 +879,7 @@ case "$1" in
 		echo "Available commands:"
 		echo -e "   start \t\t Starts the server"
 		echo -e "   stop \t\t Stops the server"
+		echo -e "   kill \t\t Kills the server"
 		echo -e "   restart \t\t Restarts the server"
 		echo -e "   backup \t\t Backups the worlds defined in the script"
 		echo -e "   whole-backup \t Backups the entire server folder"
@@ -892,6 +901,7 @@ case "$1" in
 		echo -e "   whitelist \t\t Prints the current whitelist"
 		echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist"
 		echo -e "   whitelist-reload \t Reloads the whitelist"
+		echo -e "   screen \t\t Shows the server screen"
 		;;
 	*)
 		echo "No such command, see $0 help"
