@@ -592,14 +592,6 @@ check_permissions() {
 	fi
 }
 
-show_screen() {
-        if [ $ME == $USERNAME ] ; then
-                bash -c 'script /dev/null -q -c "screen -rx $SCREEN"'
-        else
-                su $USERNAME -s /bin/bash -c 'script /dev/null -q -c "screen -rx $SCREEN"'
-        fi
-}
-
 trap force_exit SIGINT
 
 case "$1" in
@@ -821,7 +813,7 @@ case "$1" in
 		;;
 	screen)
 		if is_running; then
-			show_screen
+			as_user 'script /dev/null -q -c "screen -rx $SCREEN"'
 		else
 		echo "Server is not running. Do you want to start it?"
 		echo "Please put \"Yes\", or \"No\": "
@@ -831,7 +823,7 @@ case "$1" in
 				check_links
 				to_ram
 				mc_start
-				show_screen
+				as_user 'script /dev/null -q -c "screen -rx $SCREEN"'
 				;;
 			[Nn]|[Nn][Oo])
 				clear
