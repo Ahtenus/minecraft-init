@@ -727,9 +727,19 @@ case "$1" in
 	say)
 		# Says something to the ingame chat
 		if is_running; then
-			mc_say "$2"
+			shift 1
+			mc_say "$*"
 		else
 			echo "No running server to say anything."
+		fi
+		;;
+	command)
+		if is_running; then
+			shift 1
+			mc_command "$*"
+			echo "Sent command: $*"
+		else
+			echo "No running server to send a command to."
 		fi
 		;;
 	connected)
