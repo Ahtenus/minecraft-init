@@ -207,6 +207,27 @@ mc_stop() {
 	echo "$SERVICE is now shut down."
 }
 
+check_backup_settings() {
+	case "$BACKUPFORMAT" in
+		tar)
+			COMPRESSCMD="tar -hcjf"
+			STORECMD="tar -cpf"
+			ARCHIVEENDING=".tar.bz2"
+			STOREDENDING=".tar"
+			;;
+		zip)
+			COMPRESSCMD="zip -rq"
+			STORECMD="zip -rq -0"
+			ARCHIVEENDING=".zip"
+			STOREDENDING=".zip"
+			;;
+		*)
+			echo "$BACKUPFORMAT is not a supported backup format"
+			exit 1
+			;;
+	esac
+}
+
 get_worlds() {
 	SAVEIFS=$IFS
 	IFS=$(echo -en "\n\b")
@@ -231,6 +252,7 @@ get_worlds() {
 }
 
 mc_whole_backup() {
+	check_backup_settings
 	echo "backing up entire setup into $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
 	locationOfScript=$(dirname "$(readlink -e "$0")")
@@ -240,20 +262,13 @@ mc_whole_backup() {
 	then
 		echo "...except the following files and/or dirs:"
 		cat $locationOfScript/exclude.list
-		
-		if [ "$COMPRESS_WHOLEBACKUP" ]
-		then
-			as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH -X $locationOfScript/exclude.list"
-		else
-			as_user "tar -cpf $path/whole-backup.tar $MCPATH -X $locationOfScript/exclude.list"
-		fi
+		exclude="-X $locationOfScript/exclude.list"
+	fi
+	if [ "$COMPRESS_WHOLEBACKUP" ]
+	then
+		as_user "$COMPRESSCMD $path/whole-backup$ARCHIVEENDING $MCPATH $exclude"
 	else
-		if [ "$COMPRESS_WHOLEBACKUP" ]
-		then
-			as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
-		else
-			as_user "tar -cpf $path/whole-backup.tar $MCPATH"
-		fi
+		as_user "STORECMD $path/whole-backup$STOREDENDING $MCPATH $exclude"
 	fi
 }
 
@@ -262,6 +277,7 @@ mc_world_backup() {
 	# Backup the worlds and puts them in a folder for each day (unless $BACKUPSCRIPTCOMPATIBLE is set)
 	#
 
+	check_backup_settings
 	get_worlds
 	today="`date +%F`"
 	as_user "mkdir -p $BACKUPPATH"
@@ -277,53 +293,27 @@ mc_world_backup() {
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
-		case "$BACKUPFORMAT" in
-			tar)
-				if [ "$WORLDEDITCOMPATIBLE" ]
-				# If this is set tars will be created compatible to WorldEdit
-				then
-					as_user "mkdir -p $BACKUPPATH/${WORLDNAME[$INDEX]}"
-					path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}/ .tar.bz2 .tar.bz2`
-				elif [ "$BACKUPSCRIPTCOMPATIBLE" ]
-				# If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
-				# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
-				then
-					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.tar.bz2
-				else
-					as_user "mkdir -p $BACKUPPATH/${today}"
-					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
-				fi
-				if [ "$WORLDEDITCOMPATIBLE" ]
-				# Don't store the complete path
-				then
-					as_user "cd $MCPATH && tar -hcjf $path ${WORLDNAME[$INDEX]}"
-				else
-					as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
-				fi
-				;;
-			zip)
-				if [ "$WORLDEDITCOMPATIBLE" ]
-				then
-					as_user "mkdir -p $BACKUPPATH/${WORLDNAME[$INDEX]}"
-					path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}/ .zip .zip`
-				elif [ "$BACKUPSCRIPTCOMPATIBLE" ]
-				then
-					path=$BACKUPPATH/${WORLDNAME[$INDEX]}.zip
-				else
-					as_user "mkdir -p $BACKUPPATH/${today}"
-					path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
-				fi
-				if [ "$WORLDEDITCOMPATIBLE" ]
-				then
-					as_user "cd $MCPATH && zip -rq $path ${WORLDNAME[$INDEX]}"
-				else
-					as_user "zip -rq $path $MCPATH/${WORLDNAME[$INDEX]}"
-				fi
-				;;
-			*)
-				echo "$BACKUPFORMAT is not a supported backup format"
-				;;
-		esac
+		if [ "$WORLDEDITCOMPATIBLE" ]
+		# If this is set tars will be created compatible to WorldEdit
+		then
+			as_user "mkdir -p $BACKUPPATH/${WORLDNAME[$INDEX]}"
+			path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}/ $ARCHIVEENDING $ARCHIVEENDING`
+		elif [ "$BACKUPSCRIPTCOMPATIBLE" ]
+		# If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
+		# [backup rotation script](https://github.com/adamfeuer/rotate-backups)
+		then
+			path=$BACKUPPATH/${WORLDNAME[$INDEX]}$ARCHIVEENDING
+		else
+			as_user "mkdir -p $BACKUPPATH/${today}"
+			path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ $ARCHIVEENDING $ARCHIVEENDING`
+		fi
+		if [ "$WORLDEDITCOMPATIBLE" ]
+		# Don't store the complete path
+		then
+			as_user "cd $MCPATH && $COMPRESSCMD $path ${WORLDNAME[$INDEX]}"
+		else
+			as_user "$COMPRESSCMD $path $MCPATH/${WORLDNAME[$INDEX]}"
+		fi
 	done
 }
 
