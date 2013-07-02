@@ -45,7 +45,7 @@ as_user() {
 	fi
 }
 
-is_running(){
+is_running() {
 	# Checks for the minecraft servers screen session
 	# returns true if it exists.
 	pidfile=${MCPATH}/${SCREEN}.pid
@@ -129,12 +129,12 @@ mc_start() {
 }
 
 mc_command() {
-		if is_running
-		then
-				as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
-		else
-				echo "$SERVICE was not running. Not able to run command."
-		fi
+	if is_running
+	then
+			as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"$(eval echo $FORMAT)\"\015'"
+	else
+			echo "$SERVICE was not running. Not able to run command."
+	fi
 }
 
 mc_saveoff() {
@@ -265,13 +265,15 @@ mc_world_backup() {
 	get_worlds
 	today="`date +%F`"
 	as_user "mkdir -p $BACKUPPATH"
-	# Check if the backupt script compatibility is enabled
-		if [ "$BACKUPSCRIPTCOMPATIBLE" ]
-		then
-			# If it is enabled, then delete the old backups to prevent errors
-			echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
-			as_user "rm -r $BACKUPPATH/*"
-		fi
+	
+	# Check if the backup script compatibility is enabled
+	if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+	then
+		# If it is enabled, then delete the old backups to prevent errors
+		echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
+		as_user "rm -r $BACKUPPATH/*"
+	fi
+	
 	for INDEX in ${!WORLDNAME[@]}
 	do
 		echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
@@ -665,7 +667,7 @@ case "$1" in
 		fi
 		;;
 	whole-backup)
-				# Backup everything
+		# Backup everything
 		if is_running; then
 			mc_say "COMPLETE SERVER BACKUP IN 10 SECONDS.";
 			mc_say "WARNING: WILL RESTART SERVER SOFTWARE!"
