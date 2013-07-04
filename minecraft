@@ -207,12 +207,31 @@ mc_stop() {
 	echo "$SERVICE is now shut down."
 }
 
+check_backup_settings() {
+	case "$BACKUPFORMAT" in
+		tar)
+			COMPRESSCMD="tar -hcjf"
+			STORECMD="tar -cpf"
+			ARCHIVEENDING=".tar.bz2"
+			;;
+		zip)
+			COMPRESSCMD="zip -rq"
+			STORECMD="zip -rq -0"
+			ARCHIVEENDING=".zip"
+			;;
+		*)
+			echo "$BACKUPFORMAT is not a supported backup format"
+			exit 1
+			;;
+}
+
 log_roll() {
-	# Moves and Gzips the logfiles into a directory
-	shopt -s extglob
-	path=`datepath $LOGPATH/logs_`
+	# Moves the logfiles and compresses that backup directory
+	check_backup_settings
+	path=`datepath $LOGPATH/logs_ $ARCHIVEENDING`
 	as_user "mkdir -p $path"
-	
+
+	shopt -s extglob
 	for FILE in $(ls $MCPATH/*.log)
 	do
 		as_user "cp $FILE $path"
@@ -232,7 +251,11 @@ log_roll() {
 			echo "Failed to rotate log from $FILE into $path"
 		fi
 	done
-	as_user "gzip -r $path"
+
+	as_user "$COMPRESSCMD $path$ARCHIVEENDING $path"
+	if [ $? -eq 0 ]; then
+		as_user "rm -r $path"
+	fi
 }
 
 get_worlds() {
