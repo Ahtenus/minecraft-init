@@ -214,12 +214,14 @@ check_backup_settings() {
 			STORECMD="tar -cpf"
 			ARCHIVEENDING=".tar.bz2"
 			STOREDENDING=".tar"
+			EXCLUDEARG="-X "
 			;;
 		zip)
 			COMPRESSCMD="zip -rq"
 			STORECMD="zip -rq -0"
 			ARCHIVEENDING=".zip"
 			STOREDENDING=".zip"
+			EXCLUDEARG="-x@"
 			;;
 		*)
 			echo "$BACKUPFORMAT is not a supported backup format"
@@ -295,7 +297,7 @@ mc_whole_backup() {
 	then
 		echo "...except the following files and/or dirs:"
 		cat $locationOfScript/exclude.list
-		exclude="-X $locationOfScript/exclude.list"
+		exclude="$EXCLUDEARG$locationOfScript/exclude.list"
 	fi
 	if [ "$COMPRESS_WHOLEBACKUP" ]
 	then
@@ -899,7 +901,7 @@ case "$1" in
 		echo -e "   whole-backup \t Backups the entire server folder"
 		echo -e "   check-update \t Checks for updates of $CB_JAR and $MC_JAR"
 		echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit"
-		echo -e "   log-roll \t\t Moves and gzips the logfile"
+		echo -e "   log-roll \t\t Moves and compresses the logfiles"
 		echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage"
 		echo -e "   save-off \t\t Flushes the world to disk and then disables saving"
 		echo -e "   save-on \t\t Re-enables saving if it was previously disabled by save-off"
