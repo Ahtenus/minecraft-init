@@ -228,6 +228,39 @@ check_backup_settings() {
 	esac
 }
 
+log_roll() {
+	# Moves the logfiles and compresses that backup directory
+	check_backup_settings
+	path=`datepath $LOGPATH/logs_ $ARCHIVEENDING`
+	as_user "mkdir -p $path"
+
+	shopt -s extglob
+	for FILE in $(ls $MCPATH/*.log)
+	do
+		as_user "cp $FILE $path"
+		# only if previous command was successful
+		if [ $? -eq 0 ]; then
+			if [[ "$FILE" = @(*-+([0-9]).log) && "$FILE" = !(*-0.log) ]]
+			# some mods already roll logs. remove all but the most recent file
+			# which ends with -0.log
+			then
+				as_user "rm $FILE"
+			else
+			# truncate the existing log without restarting server
+				as_user "cp /dev/null $FILE"
+				as_user "echo \"Previous logs rolled to $path\" > $FILE"
+			fi
+		else    
+			echo "Failed to rotate log from $FILE into $path"
+		fi
+	done
+
+	as_user "$COMPRESSCMD $path$ARCHIVEENDING $path"
+	if [ $? -eq 0 ]; then
+		as_user "rm -r $path"
+	fi
+}
+
 get_worlds() {
 	SAVEIFS=$IFS
 	IFS=$(echo -en "\n\b")
@@ -745,20 +778,7 @@ case "$1" in
 		fi
 		;;
 	log-roll)
-		# Moves and Gzips the logfile
-		if [ ! -d $LOGPATH ]; then
-			as_user "mkdir -p $LOGPATH"
-		fi
-		path=`datepath $LOGPATH/server_ .log.gz .log`
-		as_user "cp $MCPATH/server.log $path && gzip $path"
-		# only if previous command was successful
-		if [ $? -eq 0 ]; then
-			# turnacate the existing log without restarting server
-			as_user "cp /dev/null $MCPATH/server.log"
-			as_user "echo \"Previous logs rolled to $path\" > $MCPATH/server.log "
-		else    
-			echo "Failed to rotate logs to $LOGPATH/server_$path.log.gz"
-		fi
+		log_roll
 		;;
 	last)
 		# Greps for recently logged in users
