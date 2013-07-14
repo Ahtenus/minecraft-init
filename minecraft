@@ -303,7 +303,7 @@ mc_whole_backup() {
 	then
 		as_user "$COMPRESSCMD $path/whole-backup$ARCHIVEENDING $MCPATH $exclude"
 	else
-		as_user "STORECMD $path/whole-backup$STOREDENDING $MCPATH $exclude"
+		as_user "$STORECMD $path/whole-backup$STOREDENDING $MCPATH $exclude"
 	fi
 }
 
