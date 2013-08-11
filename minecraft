@@ -773,8 +773,22 @@ case "$1" in
 		# Lists connected users
 		if is_running; then
 			mc_command list
-			sleep 3s
-			tac $MCPATH/server.log | grep -m 1 "Connected"
+			sleep 1s
+			# Get server log in reverse order, assume that response to 'list'
+			# command is already there.
+			tac $MCPATH/server.log | \
+				# Extract two lines. 1) containing ASCII color code and comma-separated list
+				# of  player names and 2) the line saying "[...] players online:"
+				grep --before-context 1 --max-count 1 "players online" | \
+				# Throw away the latter line.
+				head -n 1 | \
+				# Remove any escape character and the following two bytes (color code).
+				sed 's/[\x01-\x1F\x7F]..//g' | \
+				# Only pass through lines that still have content (if no player online,
+				# then nothing's left over after this grep.
+				grep . | \
+				# Replace ", " separator with newline char.
+				sed 's/, /\n/g'
 		else
 			echo "No running server."
 		fi
