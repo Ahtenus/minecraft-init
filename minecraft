@@ -779,6 +779,19 @@ case "$1" in
 			echo "No running server."
 		fi
 		;;
+	playercount)
+		# List number of connected users.
+		if is_running; then
+			mc_command list
+			sleep 1s
+			# Same as technique as 'connected' command, but count lines.
+			tac $MCPATH/server.log | \
+				grep --before-context 1 --max-count 1 "players online" | \
+				head -n 1 | sed 's/[\x01-\x1F\x7F]..//g' | grep . | sed 's/, /\n/g' | wc -l
+		else
+			echo "No running server."
+		fi
+		;;
 	log-roll)
 		log_roll
 		;;
@@ -907,6 +920,7 @@ case "$1" in
 		echo -e "   save-on \t\t Re-enables saving if it was previously disabled by save-off"
 		echo -e "   say \t\t\t Prints the given string to the ingame chat."
 		echo -e "   connected \t\t Lists connected users"
+		echo -e "   playercount \t\t Prints the number of connected users"
 		echo -e "   status \t\t Displays server status"
 		echo -e "   version \t\t Displays Bukkit version and then exits"
 		echo -e "   links \t\t Creates nessesary symlinks"
