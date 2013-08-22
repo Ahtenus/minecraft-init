@@ -796,6 +796,10 @@ case "$1" in
 	log-roll)
 		log_roll
 		;;
+	log)
+		# Display server log using 'cat'.
+		cat $MCPATH/server.log
+		;;
 	last)
 		# Greps for recently logged in users
 		echo Recently logged in users:
@@ -916,10 +920,11 @@ case "$1" in
 		echo -e "   check-update \t Checks for updates of $CB_JAR and $MC_JAR"
 		echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit"
 		echo -e "   log-roll \t\t Moves and compresses the logfiles"
+		echo -e "   log \t\t\t Prints the server log"
 		echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage"
 		echo -e "   save-off \t\t Flushes the world to disk and then disables saving"
 		echo -e "   save-on \t\t Re-enables saving if it was previously disabled by save-off"
-		echo -e "   say \t\t\t Prints the given string to the ingame chat."
+		echo -e "   say \t\t\t Prints the given string to the ingame chat"
 		echo -e "   connected \t\t Lists connected users"
 		echo -e "   status \t\t Displays server status"
 		echo -e "   version \t\t Displays Bukkit version and then exits"
