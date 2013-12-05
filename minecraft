@@ -101,6 +101,13 @@ datepath() {
 }
 
 mc_start() {
+	servicejar=$MCPATH/$SERVICE
+	if [ ! -f "$servicejar" ]
+	then
+		echo "Failed to start: Can't find the specified Minecraft jar under $servicejar. Please check your config!"
+		exit 1
+	fi
+
 	pidfile=${MCPATH}/${SCREEN}.pid
 	check_permissions
 
