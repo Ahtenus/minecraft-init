@@ -28,6 +28,9 @@ USERNAME="minecraft"
 # Path to minecraft server directory 
 MCPATH="/home/${USERNAME}/minecraft"
 
+# Path to server log file ($MCPATH/server.log on older versions)
+SERVERLOG="{$MCPATH}/logs/latest.log"
+
 # Where the worlds are located on the disk. Can not be the same as MCPATH.
 # You need to move your worlds to this directory manually, the script
 # will then handle the nessessay symlinks.
