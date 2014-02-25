@@ -112,7 +112,7 @@ mc_start() {
 	check_permissions
 
 	as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-	as_user "screen -list | grep "\.$SCREEN" | cut -f1 -d'.' | tr -d -c 0-9 > $pidfile"
+	as_user "screen -list | grep "\.$SCREEN" | cut -f1 -d'.' | head -n 1 | tr -d -c 0-9 > $pidfile"
 
 	#
 	# Waiting for the server to start
