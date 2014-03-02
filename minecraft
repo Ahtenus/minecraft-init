@@ -588,7 +588,7 @@ overviewer_copy_worlds() {
 whitelist(){
 	mc_command "whitelist list"
 	sleep 1s
-	whitelist=$(tac $MCPATH/server.log | grep -m 1 "White-listed players:")
+	whitelist=$(tac $SERVERLOG | grep -m 1 "White-listed players:")
 
 	echo
 	echo "Currently there are the following players on your whitelist:"
@@ -783,7 +783,7 @@ case "$1" in
 			sleep 1s
 			# Get server log in reverse order, assume that response to 'list'
 			# command is already there.
-			tac $MCPATH/server.log | \
+			tac $SERVERLOG | \
 				# Extract two lines. 1) containing ASCII color code and comma-separated list
 				# of  player names and 2) the line saying "[...] players online:"
 				grep --before-context 1 --max-count 1 "players online" | \
@@ -806,7 +806,7 @@ case "$1" in
 			mc_command list
 			sleep 1s
 			# Same as technique as 'connected' command, but count lines.
-			tac $MCPATH/server.log | \
+			tac $SERVERLOG | \
 				grep --before-context 1 --max-count 1 "players online" | \
 				head -n 1 | sed 's/[\x01-\x1F\x7F]..//g' | grep . | sed 's/, /\n/g' | wc -l
 		else
@@ -818,12 +818,12 @@ case "$1" in
 		;;
 	log)
 		# Display server log using 'cat'.
-		cat $MCPATH/server.log
+		cat $SERVERLOG
 		;;
 	last)
 		# Greps for recently logged in users
 		echo Recently logged in users:
-		cat $MCPATH/server.log | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
+		cat $SERVERLOG | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
 		;;
 	status)
 		# Shows server status
@@ -837,7 +837,7 @@ case "$1" in
 	version)
 		if is_running; then
 			mc_command version
-			tac $MCPATH/server.log | grep -m 1 "This server is running"
+			tac $SERVERLOG | grep -m 1 "This server is running"
 		else
 			echo "The server needs to be running to check version."
 		fi
