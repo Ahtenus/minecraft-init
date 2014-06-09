@@ -875,7 +875,7 @@ case "$1" in
 		;;
 	screen)
 		if is_running; then
-			as_user 'script /dev/null -q -c "screen -rx $SCREEN"'
+			as_user "script /dev/null -q -c \"screen -rx $SCREEN\""
 		else
 		echo "Server is not running. Do you want to start it?"
 		echo "Please put \"Yes\", or \"No\": "
@@ -885,7 +885,7 @@ case "$1" in
 				check_links
 				to_ram
 				mc_start
-				as_user 'script /dev/null -q -c "screen -rx $SCREEN"'
+				as_user "script /dev/null -q -c \"screen -rx $SCREEN\""
 				;;
 			[Nn]|[Nn][Oo])
 				clear
