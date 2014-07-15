@@ -215,13 +215,8 @@ mc_stop() {
 }
 
 mc_reload() {
-        if is_running
-        then
-                echo "$SERVICE is running... reloading."
-                mc_command reload
-        else
-                echo "$SERVICE was not running. Not able to reload anything."
-        fi
+        echo "$SERVICE is running... reloading."
+        mc_command reload
 }
 
 check_backup_settings() {
@@ -674,8 +669,12 @@ case "$1" in
 		;;
         reload)
                 # Reloads server configuration
-                mc_say "Reloading configurations.."
-                mc_reload
+                if is_running; then
+                        mc_say "Reloading server configuration.."
+                        mc_reload
+                else
+                        echo "No running server."
+                fi
                 ;;
 	whitelist)
 		if is_running; then
