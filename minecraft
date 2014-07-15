@@ -215,12 +215,12 @@ mc_stop() {
 }
 
 mc_reload() {
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+        if is_running
         then
                 echo "$SERVICE is running... reloading."
-                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"reload\"\015'"
+                mc_command reload
         else
-                echo "$SERVICE was not running."
+                echo "$SERVICE was not running. Not able to reload anything."
         fi
 }
 
@@ -674,7 +674,7 @@ case "$1" in
 		;;
         reload)
                 # Reloads server configuration
-                as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Reloading configurations..\"\015'"
+                mc_say "Reloading configurations.."
                 mc_reload
                 ;;
 	whitelist)
