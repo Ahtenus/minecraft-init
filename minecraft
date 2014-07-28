@@ -214,6 +214,11 @@ mc_stop() {
 	echo "$SERVICE is now shut down."
 }
 
+mc_reload() {
+        echo "$SERVICE is running... reloading."
+        mc_command reload
+}
+
 check_backup_settings() {
 	case "$BACKUPFORMAT" in
 		tar)
@@ -662,6 +667,15 @@ case "$1" in
 		to_ram
 		mc_start
 		;;
+        reload)
+                # Reloads server configuration
+                if is_running; then
+                        mc_say "Reloading server configuration.."
+                        mc_reload
+                else
+                        echo "No running server."
+                fi
+                ;;
 	whitelist)
 		if is_running; then
 			whitelist
@@ -935,6 +949,7 @@ case "$1" in
 		echo -e "   stop \t\t Stops the server"
 		echo -e "   kill \t\t Kills the server"
 		echo -e "   restart \t\t Restarts the server"
+		echo -e "   reload \t\t Reloads the server configuration"
 		echo -e "   backup \t\t Backups the worlds defined in the script"
 		echo -e "   whole-backup \t Backups the entire server folder"
 		echo -e "   check-update \t Checks for updates of $CB_JAR and $MC_JAR"
