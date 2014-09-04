@@ -1,6 +1,6 @@
 Init script for minecraft/bukkit servers
 =======================================
-A init script that apart form starting and stopping the server correctly also has some extra features
+A init script that apart from starting and stopping the server correctly also has some extra features
 for running a mincraft/craftbukkit server.
 
 Features
